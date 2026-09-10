@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { USERS } from '../fixtures/users';
+import { ProductPage } from '../pages/product.page';
 import {
   testDb,
   createOrderFor,
@@ -196,9 +197,9 @@ test.describe('SK-API — route-level authorisation', () => {
     const page = await context.newPage();
     try {
       // Adding to the cart is what mints the guest token.
-      await page.goto('/products/leather-bifold-wallet');
-      await page.getByTestId('add-to-cart-btn').click();
-      await page.getByTestId('add-to-cart-success').waitFor({ state: 'visible' });
+      const product = new ProductPage(page);
+      await product.goto('leather-bifold-wallet');
+      await product.addToCartAndWait();
 
       const cookies = await context.cookies();
       const guest = cookies.find((cookie) => cookie.name === 'sokoni.guest');

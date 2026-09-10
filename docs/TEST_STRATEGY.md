@@ -26,7 +26,7 @@ here, because the units are mostly trivial and the bugs live in the seams.
          ├───────────────────────────────┤
          │  API           34 specs       │  contract + authorisation
          ├───────────────────────────────┤
-         │  E2E          217 specs       │  the bulk of the value
+         │  E2E          214 specs       │  the bulk of the value
          └───────────────────────────────┘
 ```
 

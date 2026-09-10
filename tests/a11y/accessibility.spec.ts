@@ -242,9 +242,12 @@ test.describe('SK-A11Y — keyboard and focus', () => {
     }
   });
 
-  test('SK-A11Y-024 every image carries alt text or is marked decorative', async ({ page }) => {
-    await page.goto('/products');
-    await page.getByTestId('product-grid').waitFor({ state: 'visible' });
+  test('SK-A11Y-024 every image carries alt text or is marked decorative', async ({
+    page,
+    cataloguePage,
+  }) => {
+    await cataloguePage.goto();
+    await expect(cataloguePage.grid).toBeVisible();
 
     const images = await page.locator('img').all();
     expect(images.length).toBeGreaterThan(0);

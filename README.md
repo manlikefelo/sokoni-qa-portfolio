@@ -1,29 +1,84 @@
 # Sokoni — e-commerce platform and QA automation suite
 
-A working Next.js storefront, built to be tested. The application is the system under
-test; the Playwright suite in `tests/` and the write-ups in `docs/` are the point of
-the repository.
+[![CI](https://github.com/manlikefelo/sokoni-qa-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/manlikefelo/sokoni-qa-portfolio/actions/workflows/ci.yml)
 
-> **This application contains ten deliberately seeded defects.** They are documented
+A working Next.js storefront, built to be tested. The application is the system under
+test; the Playwright suite in `tests/` and the write-ups in `docs/` are the point of the
+repository.
+
+> **This application contains ten deliberately seeded defects.** Every one is documented
 > in [`SEEDED_DEFECTS.md`](./SEEDED_DEFECTS.md), each introduced in its own commit, and
-> the last defect-free commit is tagged `v1.0-clean`. The defects exist so the test
-> suite has something real to catch. Everything outside that list is meant to be
-> correct — including the whole security layer, where no defect was seeded.
+> the last defect-free commit is tagged `v1.0-clean`. They exist so the suite has real
+> failures to find. Everything outside that list is meant to be correct — including the
+> whole security layer, where nothing was seeded.
+
+---
+
+## The short version
+
+I wrote a specification-complete e-commerce application, seeded ten defects into it, then
+wrote a Playwright suite from the specification without looking at the defect list. The
+suite found all ten. It also found **one defect I had not planted** and, along the way,
+**four genuine bugs in my own application** that I fixed rather than leaving in.
+
+More usefully, it found **eight defects in my own tests** — including one case where six
+tests were passing while submitting nothing at all. Those are written up in
+[`docs/TRIAGE_NOTES.md`](./docs/TRIAGE_NOTES.md) with the reasoning, because knowing the
+difference between a broken application and a broken test is most of the job.
+
+|                              |                                                                   |
+| ---------------------------- | ----------------------------------------------------------------- |
+| Application                  | 24 routes, Next.js 16 App Router, TypeScript `strict`, zero `any` |
+| Suite                        | 274 specs across E2E, API, accessibility and visual layers        |
+| Seeded defects               | 10, all caught by named tests written from the spec               |
+| Unplanned defects found      | 1 in the application, 4 more found and fixed during the build     |
+| Test defects found and fixed | 8, each documented with the root cause                            |
+| Retries                      | 0, locally and in CI                                              |
+
+---
+
+## Start here
+
+| If you want to see…                        | Read                                               |
+| ------------------------------------------ | -------------------------------------------------- |
+| How I think about testing this application | [`docs/TEST_STRATEGY.md`](./docs/TEST_STRATEGY.md) |
+| Scope, entry and exit criteria, risks      | [`docs/TEST_PLAN.md`](./docs/TEST_PLAN.md)         |
+| Defect reports with concrete values        | [`docs/DEFECTS.md`](./docs/DEFECTS.md)             |
+| Requirement-to-test coverage               | [`docs/TRACEABILITY.md`](./docs/TRACEABILITY.md)   |
+| Every failure I triaged, and how           | [`docs/TRIAGE_NOTES.md`](./docs/TRIAGE_NOTES.md)   |
+| What was seeded and why it is subtle       | [`SEEDED_DEFECTS.md`](./SEEDED_DEFECTS.md)         |
+
+If you only read one, read `TRIAGE_NOTES.md`. The other documents describe a finished
+suite; that one shows the working.
 
 ---
 
 ## What this demonstrates
 
-| Area                                                | Where to look                                      |
-| --------------------------------------------------- | -------------------------------------------------- |
-| Test strategy and the reasoning behind it           | [`docs/TEST_STRATEGY.md`](./docs/TEST_STRATEGY.md) |
-| Test plan: scope, entry and exit criteria, risks    | [`docs/TEST_PLAN.md`](./docs/TEST_PLAN.md)         |
-| Defect reports with concrete expected/actual values | [`docs/DEFECTS.md`](./docs/DEFECTS.md)             |
-| Requirement-to-test traceability                    | [`docs/TRACEABILITY.md`](./docs/TRACEABILITY.md)   |
-| Page Object Model, fixtures, data isolation         | `tests/pages/`, `tests/fixtures/`                  |
-| Boundary analysis on money and pagination           | `tests/e2e/pricing/`, `tests/e2e/catalogue/`       |
-| API-level testing independent of the UI             | `tests/api/`                                       |
-| Accessibility automation                            | `tests/a11y/`                                      |
+**Boundary analysis where it matters.** Eight of the ten seeded defects are boundary
+errors, so the suite is weighted accordingly. The free-shipping threshold is tested at
+exactly KSh 5,000 and a cent either side, and again where the discount drags the
+post-discount subtotal across it. The 25 pricing cases were derived by hand from the
+specification and checked against an independent reimplementation of the rules _before_
+any test consumed them — a baseline recorded from the application would have agreed with
+the application's own mistakes.
+
+**Assertions on values, not presence.** `expect(total).toHaveText('KSh 4,150.00')`, never
+`toBeVisible()`. Half the seeded defects render a perfect page showing the wrong number.
+
+**Knowing when a test cannot prove what it claims.** Two cases came up where a
+browser-level guard fired before the server check the test was aiming at, so the test
+could not fail. Both moved to the API layer. One case had a helper submitting a form
+bound to nothing — six green tests exercising nothing. That helper now reports whether it
+actually submitted, and the test asserts that first.
+
+**Flakiness treated as a defect.** Running the suite with `--repeat-each=2` turned 11
+green tests red. All 11 were my fault. Two fixes were tried and rejected for narrowing
+the race rather than removing it, before the right one.
+
+**Layers chosen for a reason.** `docs/TEST_STRATEGY.md` argues why the weight sits at the
+end-to-end layer for an application whose logic is server-side arithmetic, rather than
+reciting the pyramid.
 
 ---
 
@@ -37,6 +92,25 @@ npm run seed                  # deterministic catalogue, users and promo codes
 npm run dev                   # http://localhost:3000
 ```
 
+### Running the tests
+
+```bash
+npx playwright install --with-deps   # once
+npm run test                         # the parallel suite
+npm run test:serial                  # the specs that need the app to themselves
+npm run test:ui                      # interactive runner
+npx playwright show-report           # the HTML report
+```
+
+Expect **62 failures on `main`**. Those are the tests that catch the seeded defects.
+To see the suite green, check out the clean baseline:
+
+```bash
+git checkout v1.0-clean && npm run test
+```
+
+That contrast is the whole demonstration, and it is reproducible in two commands.
+
 ### Seeded accounts
 
 | Role     | Email                | Password        |
@@ -45,11 +119,10 @@ npm run dev                   # http://localhost:3000
 | Customer | `asha@example.com`   | `Customer2026`  |
 | Customer | `brian@example.com`  | `Customer2026`  |
 
-### Test card numbers
+### Test cards
 
-The payment gateway is an internal mock at `POST /api/mock-payment`. The outcome is
-driven entirely by the card number, so every branch is reachable without a sandbox
-account.
+The gateway is an internal mock at `POST /api/mock-payment`. The outcome is a pure
+function of the card number, so every branch is reachable without a sandbox account.
 
 | Card number           | Outcome                               |
 | --------------------- | ------------------------------------- |
@@ -62,28 +135,15 @@ account.
 
 ### Promo codes
 
-| Code        | Effect        | Notes                                               |
-| ----------- | ------------- | --------------------------------------------------- |
-| `SAVE10`    | 10% off       | no minimum                                          |
-| `SAVE25`    | 25% off       | minimum spend KSh 3,000                             |
-| `FLAT500`   | KSh 500 off   | minimum spend KSh 2,000                             |
-| `EXPIRED20` | 20% off       | expired yesterday — must be rejected                |
-| `ENDSTODAY` | 15% off       | expires 23:59:59 UTC today — must still be accepted |
-| `ONESHOT`   | KSh 1,000 off | single use                                          |
-| `DEAD5`     | 5% off        | inactive — must be rejected                         |
-
----
-
-## Running the tests
-
-```bash
-npx playwright install --with-deps   # once
-npm run test                         # the whole suite
-npm run test:ui                      # interactive runner
-npx playwright test tests/e2e/pricing          # one area
-npx playwright test --project=chromium         # one browser
-npx playwright show-report                     # the HTML report
-```
+| Code        | Effect        | Notes                                                   |
+| ----------- | ------------- | ------------------------------------------------------- |
+| `SAVE10`    | 10% off       | no minimum                                              |
+| `SAVE25`    | 25% off       | minimum spend KSh 3,000                                 |
+| `FLAT500`   | KSh 500 off   | minimum spend KSh 2,000                                 |
+| `EXPIRED20` | 20% off       | expired yesterday — must be rejected                    |
+| `ENDSTODAY` | 15% off       | expires 23:59:59 UTC today — **must still be accepted** |
+| `ONESHOT`   | KSh 1,000 off | single use                                              |
+| `DEAD5`     | 5% off        | inactive — must be rejected                             |
 
 ---
 
@@ -91,18 +151,18 @@ npx playwright show-report                     # the HTML report
 
 ```
 ┌─────────────────────── Test layer (the deliverable) ───────────────────────┐
-│  tests/e2e      journeys through the UI, by data-testid only               │
-│  tests/api      gateway contract and route-level authorisation             │
-│  tests/a11y     axe-core on six pages, keyboard traversal                  │
-│  tests/visual   screenshot baselines, desktop and mobile                   │
-│  tests/pages    Page Objects — the only place a locator is written          │
-│  tests/fixtures auth storageState, database reset, factories               │
+│  tests/e2e       214 specs — journeys, by data-testid only                 │
+│  tests/api        34 specs — gateway contract, route-level authorisation   │
+│  tests/a11y       14 specs — axe-core, keyboard traversal, focus           │
+│  tests/visual     10 baselines — desktop and mobile                        │
+│  tests/pages       8 page objects — the only place a locator is written    │
+│  tests/fixtures      auth storageState, database helpers, worker scoping   │
 └────────────────────────────────┬───────────────────────────────────────────┘
-                                 │ drives
+                                 │ drives a production build
 ┌────────────────────────────────▼───────────────────────────────────────────┐
 │  Application (the system under test)                                       │
 │                                                                            │
-│  src/app          App Router pages, route handlers, middleware             │
+│  src/app          App Router pages, route handlers, proxy                  │
 │  src/components   Server and Client Components                             │
 │  src/actions      Server Actions — every one authorises and validates      │
 │  src/schemas      Zod schemas, shared between client and server            │
@@ -111,56 +171,60 @@ npx playwright show-report                     # the HTML report
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Technology
-
 Next.js 16 (App Router) · React 19 · TypeScript `strict` · Tailwind CSS 4 ·
 Prisma 6 with SQLite · Auth.js v5 with argon2id · Zod · Playwright · GitHub Actions
 
 ### Conventions worth knowing
 
 - **Money is always an integer count of cents.** No floats touch a monetary value
-  anywhere — not in the database, not in the pricing engine, not in transport. All
-  display goes through one formatter in `src/lib/money.ts`.
+  anywhere. All display goes through one formatter in `src/lib/money.ts`.
 - **The pricing engine is pure.** `src/lib/pricing.ts` has no database access and no
-  clock reads. Order of operations is fixed: subtotal, then discount against the
-  subtotal only, then shipping assessed on the post-discount subtotal, then total.
-- **Totals are always recomputed server-side** at order creation. A client-submitted
-  price or total is ignored entirely.
-- **Stock moves only after payment is approved**, inside a transaction, with a
-  conditional decrement so two shoppers cannot both buy the last unit.
-- **Every interactive element carries a `data-testid`.** The suite never selects on a
-  CSS class, a text string, or a DOM position.
+  clock reads. Order of operations is fixed: subtotal, discount against the subtotal
+  only, shipping assessed on the post-discount subtotal, total.
+- **Totals are recomputed server-side** at order creation. A client-submitted price or
+  total is ignored entirely.
+- **The suite runs against a production build.** Next.js streams dynamic routes
+  differently in development, and several assertions are about HTTP status codes — a 404
+  asserted against `next dev` can pass while the same route returns 200 in production.
+  That is how two of the four unplanned application defects were found.
+- **Every interactive element carries a `data-testid`**, and no spec file contains a
+  locator. Checkable with `grep -r getByTestId tests/e2e` — it returns nothing.
 
 ---
 
 ## Security
 
-The security layer is a functional requirement, not a place where defects were
-seeded. Implemented and manually verified:
+The security layer is a functional requirement, not a place where defects were seeded.
+Every item below is asserted by a test, listed in `docs/TRACEABILITY.md`:
 
-- argon2id password hashing; a login attempt against an unknown email still performs a
-  verification so response timing does not reveal which emails are registered
+- argon2id password hashing; an unknown email still performs a verification so response
+  timing does not reveal which addresses are registered
 - `HttpOnly`, `SameSite=Lax` session cookies, `Secure` in production
-- rate limiting on login, registration and promo application — 10 attempts per 15
-  minutes per IP
-- authorisation resolved from the session inside every server action and route
-  handler; the UI hiding a control is never the boundary
-- ownership checks on orders, addresses and carts, written into the query rather than
-  applied as an afterthought; another user's order returns 404, not 403
+- rate limiting on login, registration and promo application — 10 per 15 minutes per IP
+- authorisation resolved from the session inside every server action and route handler;
+  the UI hiding a control is never the boundary, and `tests/api/authorization.spec.ts`
+  asks the routes directly as every role
+- ownership checks written into the query rather than applied afterwards; another user's
+  order returns 404, not 403
 - Zod validation on every action and route input — parsed, never cast
 - Prisma only, no raw SQL; no `dangerouslySetInnerHTML` anywhere
-- `Content-Security-Policy`, `X-Frame-Options: DENY`, `X-Content-Type-Options`,
-  `Referrer-Policy`, `Strict-Transport-Security` set in `next.config.ts`
+- CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Referrer-Policy` and HSTS
 - environment validated with Zod at startup; the process refuses to boot if a variable
   is missing or malformed
 - the mock gateway never logs, persists or echoes a card number
 
+### The one piece of test-only code
+
+`/api/test-support/reset-rate-limit` clears rate-limit buckets. It answers 404 unless
+`TEST_SUPPORT_TOKEN` is set and matches, and no real deployment sets it. The reasoning —
+and why weakening the limiter instead would have been worse — is in
+`docs/TEST_STRATEGY.md`.
+
 ### Known advisory
 
-`npm audit` reports a high-severity advisory in `deepmerge-ts`, reached only through
-the Prisma **CLI's** config loader. It is a devDependency that never enters the
-application bundle, and the automated fix downgrades Prisma to 6.12. Left as-is
-deliberately.
+`npm audit` reports a high-severity advisory in `deepmerge-ts`, reached only through the
+Prisma **CLI's** config loader. It is a devDependency that never enters the application
+bundle, and the automated fix downgrades Prisma to 6.12. Left as-is deliberately.
 
 ---
 
@@ -168,19 +232,20 @@ deliberately.
 
 `Order.shippingAddress` stores JSON in a `String` column rather than using Prisma's
 `Json` type, because SQLite does not support `Json` and the schema has to stay
-Postgres-compatible. Switching the provider to Postgres needs no change to any model
-body.
+Postgres-compatible. Switching provider needs no change to any model body.
 
-`Product.searchText` holds a lowercased copy of the name and description. SQLite's
-Prisma connector has no case-insensitive `contains`, so search compares a lowercased
-needle against this column. It is maintained on every write.
+`Product.searchText` holds a lowercased copy of the name and description. It is
+maintained on every write but — as a consequence of one of the seeded defects — no longer
+read by search. See `SEEDED_DEFECTS.md` BUG-09.
 
 ---
 
 ## Out of scope
 
 Real payment processing, email delivery (logged to console), reviews, wishlists,
-recommendations, multi-currency, image upload, returns and refunds, deployment.
+recommendations, multi-currency, image upload, returns and refunds, deployment. Load
+testing and penetration testing are out of scope with reasons given in
+`docs/TEST_PLAN.md`.
 
 ---
 
