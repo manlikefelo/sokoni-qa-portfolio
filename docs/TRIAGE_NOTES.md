@@ -55,3 +55,41 @@ Resolved two ways:
 This is the argument for having an API layer in the suite at all. A defect sitting
 behind a correct client-side guard is invisible to every UI test, and would stay
 invisible until someone removed the guard.
+
+## Pricing specs — first run
+
+All 25 data-driven cases plus the scope and rounding specs. 12 failed, and every
+failure carries an exact expected-versus-actual pair:
+
+| Failure                                                            | Verdict | Evidence                                                                                                                          |
+| ------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| SK-PRICE-100 and the percentage cases below the shipping threshold | defect  | Expected `-KSh 200.00`, received `-KSh 235.00`. The discount is 10% of subtotal plus shipping rather than of the subtotal.        |
+| SK-PRICE-102 and the rounding cases                                | defect  | Expected `-KSh 555.58`, received `-KSh 555.60`. Two cents, from rounding each line's share instead of rounding the subtotal once. |
+
+### Two infrastructure problems found on the way, both real
+
+**The rate limiter was counting successful promo applications.** The suite applies
+codes dozens of times from one IP and started getting "Too many attempts" — correct
+behaviour from the limiter, at first glance.
+
+Reading the code, though, `applyPromoAction` counted every attempt including the
+successful ones, while `loginAction` already cleared its bucket on success. The
+limiter exists to stop someone grinding through candidate codes; a shopper who
+successfully applies a valid code on ten separate orders is not doing that, and under
+the old behaviour was locked out of the eleventh. Fixed in the application, not worked
+around in the test — `resetRateLimit` on success, matching the login path.
+
+This is the more valuable of the two findings. The test run surfaced it, but it is a
+defect a real customer would hit, and nothing in the PRD's own test list would have
+caught it.
+
+**Test-support route needed for the rest.** Even with that fixed, specs that
+deliberately exercise _rejected_ codes still accumulate against the limit. Weakening
+the limiter would mean no longer testing a security requirement, so the suite clears
+the buckets between specs through `/api/test-support/reset-rate-limit`, gated on a
+`TEST_SUPPORT_TOKEN` that is absent in any real deployment — where the route answers
+404 and does not advertise itself.
+
+The first version of that route also checked `NODE_ENV !== 'production'` and therefore
+404'd during the run, because the suite deliberately tests against a production build.
+The environment variable is the honest control; NODE_ENV was the wrong gate.

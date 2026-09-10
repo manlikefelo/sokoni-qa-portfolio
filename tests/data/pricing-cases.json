@@ -1,0 +1,217 @@
+{
+  "comment": "Expected figures derived from PRD 4.5 by hand, not from running the application. subtotal = sum(unitPriceCents x quantity); discount applies to the SUBTOTAL ONLY and is rounded once; shipping is free when (subtotal - discount) >= 500000, otherwise 35000; total = subtotal - discount + shipping. All amounts are integer cents.",
+  "cases": [
+    {
+      "id": "PRICE-001",
+      "name": "single item, no promo, below the free-shipping threshold",
+      "lines": [{ "sku": "FASH-WALL-BRN", "unitPriceCents": 210000, "quantity": 1 }],
+      "promo": null,
+      "expected": { "subtotal": 210000, "discount": 0, "shipping": 35000, "total": 245000 }
+    },
+    {
+      "id": "PRICE-002",
+      "name": "single item, quantity above one",
+      "lines": [{ "sku": "FASH-WALL-BRN", "unitPriceCents": 210000, "quantity": 2 }],
+      "promo": null,
+      "expected": { "subtotal": 420000, "discount": 0, "shipping": 35000, "total": 455000 }
+    },
+    {
+      "id": "PRICE-003",
+      "name": "subtotal exactly at the free-shipping threshold",
+      "lines": [{ "sku": "HOME-BED66-CHR", "unitPriceCents": 520000, "quantity": 1 }],
+      "promo": null,
+      "expected": { "subtotal": 520000, "discount": 0, "shipping": 0, "total": 520000 }
+    },
+    {
+      "id": "PRICE-004",
+      "name": "subtotal one cent below the threshold still pays shipping",
+      "lines": [
+        { "sku": "FASH-WALL-BRN", "unitPriceCents": 210000, "quantity": 2 },
+        { "sku": "HOME-NX18-STL", "unitPriceCents": 79999, "quantity": 1 }
+      ],
+      "promo": null,
+      "expected": { "subtotal": 499999, "discount": 0, "shipping": 35000, "total": 534999 }
+    },
+    {
+      "id": "PRICE-005",
+      "name": "subtotal one cent above the threshold ships free",
+      "lines": [
+        { "sku": "FASH-WALL-BRN", "unitPriceCents": 210000, "quantity": 2 },
+        { "sku": "HOME-NX18-STL", "unitPriceCents": 80001, "quantity": 1 }
+      ],
+      "promo": null,
+      "expected": { "subtotal": 500001, "discount": 0, "shipping": 0, "total": 500001 }
+    },
+    {
+      "id": "PRICE-006",
+      "name": "ten percent off, shipping charged, discount on the subtotal only",
+      "lines": [{ "sku": "FASH-WALL-BRN", "unitPriceCents": 200000, "quantity": 1 }],
+      "promo": { "code": "SAVE10", "type": "PERCENTAGE", "value": 10, "minSpendCents": 0 },
+      "expected": { "subtotal": 200000, "discount": 20000, "shipping": 35000, "total": 215000 }
+    },
+    {
+      "id": "PRICE-007",
+      "name": "ten percent off with free shipping, so the discount is unambiguous",
+      "lines": [{ "sku": "HOME-BED66-CHR", "unitPriceCents": 600000, "quantity": 1 }],
+      "promo": { "code": "SAVE10", "type": "PERCENTAGE", "value": 10, "minSpendCents": 0 },
+      "expected": { "subtotal": 600000, "discount": 60000, "shipping": 0, "total": 540000 }
+    },
+    {
+      "id": "PRICE-008",
+      "name": "discount drags the post-discount subtotal below the threshold",
+      "lines": [{ "sku": "HOME-BED66-CHR", "unitPriceCents": 520000, "quantity": 1 }],
+      "promo": { "code": "SAVE10", "type": "PERCENTAGE", "value": 10, "minSpendCents": 0 },
+      "expected": { "subtotal": 520000, "discount": 52000, "shipping": 35000, "total": 503000 }
+    },
+    {
+      "id": "PRICE-009",
+      "name": "post-discount subtotal lands exactly on the threshold, so shipping stays free",
+      "lines": [{ "sku": "HOME-BED66-CHR", "unitPriceCents": 555556, "quantity": 1 }],
+      "promo": { "code": "SAVE10", "type": "PERCENTAGE", "value": 10, "minSpendCents": 0 },
+      "expected": { "subtotal": 555556, "discount": 55556, "shipping": 0, "total": 500000 }
+    },
+    {
+      "id": "PRICE-010",
+      "name": "twenty-five percent off above its minimum spend",
+      "lines": [{ "sku": "FASH-WALL-BRN", "unitPriceCents": 400000, "quantity": 1 }],
+      "promo": { "code": "SAVE25", "type": "PERCENTAGE", "value": 25, "minSpendCents": 300000 },
+      "expected": { "subtotal": 400000, "discount": 100000, "shipping": 35000, "total": 335000 }
+    },
+    {
+      "id": "PRICE-011",
+      "name": "twenty-five percent off exactly at its minimum spend",
+      "lines": [{ "sku": "FASH-WALL-BRN", "unitPriceCents": 300000, "quantity": 1 }],
+      "promo": { "code": "SAVE25", "type": "PERCENTAGE", "value": 25, "minSpendCents": 300000 },
+      "expected": { "subtotal": 300000, "discount": 75000, "shipping": 35000, "total": 260000 }
+    },
+    {
+      "id": "PRICE-012",
+      "name": "one cent below the minimum spend, so no discount",
+      "lines": [{ "sku": "FASH-WALL-BRN", "unitPriceCents": 299999, "quantity": 1 }],
+      "promo": { "code": "SAVE25", "type": "PERCENTAGE", "value": 25, "minSpendCents": 300000 },
+      "expected": { "subtotal": 299999, "discount": 0, "shipping": 35000, "total": 334999 }
+    },
+    {
+      "id": "PRICE-013",
+      "name": "fixed discount above its minimum spend",
+      "lines": [{ "sku": "FASH-WALL-BRN", "unitPriceCents": 250000, "quantity": 1 }],
+      "promo": { "code": "FLAT500", "type": "FIXED", "value": 50000, "minSpendCents": 200000 },
+      "expected": { "subtotal": 250000, "discount": 50000, "shipping": 35000, "total": 235000 }
+    },
+    {
+      "id": "PRICE-014",
+      "name": "fixed discount exactly at its minimum spend",
+      "lines": [{ "sku": "FASH-WALL-BRN", "unitPriceCents": 200000, "quantity": 1 }],
+      "promo": { "code": "FLAT500", "type": "FIXED", "value": 50000, "minSpendCents": 200000 },
+      "expected": { "subtotal": 200000, "discount": 50000, "shipping": 35000, "total": 185000 }
+    },
+    {
+      "id": "PRICE-015",
+      "name": "fixed discount larger than the subtotal is capped at the subtotal",
+      "lines": [{ "sku": "HOME-BAM3-NAT", "unitPriceCents": 30000, "quantity": 1 }],
+      "promo": { "code": "BIGFIXED", "type": "FIXED", "value": 50000, "minSpendCents": 0 },
+      "expected": { "subtotal": 30000, "discount": 30000, "shipping": 35000, "total": 35000 }
+    },
+    {
+      "id": "PRICE-016",
+      "name": "a hundred percent discount zeroes the goods but not the shipping",
+      "lines": [{ "sku": "HOME-BAM3-NAT", "unitPriceCents": 165000, "quantity": 1 }],
+      "promo": { "code": "ALLOFF", "type": "PERCENTAGE", "value": 100, "minSpendCents": 0 },
+      "expected": { "subtotal": 165000, "discount": 165000, "shipping": 35000, "total": 35000 }
+    },
+    {
+      "id": "PRICE-017",
+      "name": "three lines, no promo",
+      "lines": [
+        { "sku": "FASH-WALL-BRN", "unitPriceCents": 210000, "quantity": 1 },
+        { "sku": "FASH-CREW-M-WHT", "unitPriceCents": 145000, "quantity": 2 },
+        { "sku": "HOME-BAM3-NAT", "unitPriceCents": 165000, "quantity": 1 }
+      ],
+      "promo": null,
+      "expected": { "subtotal": 665000, "discount": 0, "shipping": 0, "total": 665000 }
+    },
+    {
+      "id": "PRICE-018",
+      "name": "three lines with a percentage promo",
+      "lines": [
+        { "sku": "FASH-WALL-BRN", "unitPriceCents": 210000, "quantity": 1 },
+        { "sku": "FASH-CREW-M-WHT", "unitPriceCents": 145000, "quantity": 1 }
+      ],
+      "promo": { "code": "SAVE10", "type": "PERCENTAGE", "value": 10, "minSpendCents": 0 },
+      "expected": { "subtotal": 355000, "discount": 35500, "shipping": 35000, "total": 354500 }
+    },
+    {
+      "id": "PRICE-019",
+      "name": "rounding: three lines each landing on a half cent, rounded once on the subtotal",
+      "lines": [
+        { "sku": "R1", "unitPriceCents": 333, "quantity": 1 },
+        { "sku": "R2", "unitPriceCents": 333, "quantity": 1 },
+        { "sku": "R3", "unitPriceCents": 333, "quantity": 1 }
+      ],
+      "promo": { "code": "SAVE10", "type": "PERCENTAGE", "value": 10, "minSpendCents": 0 },
+      "expected": { "subtotal": 999, "discount": 100, "shipping": 35000, "total": 35899 }
+    },
+    {
+      "id": "PRICE-020",
+      "name": "rounding: five half-cent lines above the threshold, so shipping cannot mask the drift",
+      "lines": [
+        { "sku": "R1", "unitPriceCents": 111115, "quantity": 1 },
+        { "sku": "R2", "unitPriceCents": 111115, "quantity": 1 },
+        { "sku": "R3", "unitPriceCents": 111115, "quantity": 1 },
+        { "sku": "R4", "unitPriceCents": 111115, "quantity": 1 },
+        { "sku": "R5", "unitPriceCents": 111115, "quantity": 1 }
+      ],
+      "promo": { "code": "SAVE10", "type": "PERCENTAGE", "value": 10, "minSpendCents": 0 },
+      "expected": { "subtotal": 555575, "discount": 55558, "shipping": 0, "total": 500017 }
+    },
+    {
+      "id": "PRICE-021",
+      "name": "rounding: quantity above one on a half-cent unit price",
+      "lines": [{ "sku": "R1", "unitPriceCents": 1499, "quantity": 7 }],
+      "promo": { "code": "SAVE10", "type": "PERCENTAGE", "value": 10, "minSpendCents": 0 },
+      "expected": { "subtotal": 10493, "discount": 1049, "shipping": 35000, "total": 44444 }
+    },
+    {
+      "id": "PRICE-022",
+      "name": "rounding: ten half-cent lines, where per-line rounding would drift five cents",
+      "lines": [
+        { "sku": "R1", "unitPriceCents": 104525, "quantity": 1 },
+        { "sku": "R2", "unitPriceCents": 104525, "quantity": 1 },
+        { "sku": "R3", "unitPriceCents": 104525, "quantity": 1 },
+        { "sku": "R4", "unitPriceCents": 104525, "quantity": 1 },
+        { "sku": "R5", "unitPriceCents": 104525, "quantity": 1 },
+        { "sku": "R6", "unitPriceCents": 104525, "quantity": 1 },
+        { "sku": "R7", "unitPriceCents": 104525, "quantity": 1 },
+        { "sku": "R8", "unitPriceCents": 104525, "quantity": 1 },
+        { "sku": "R9", "unitPriceCents": 104525, "quantity": 1 },
+        { "sku": "R10", "unitPriceCents": 104525, "quantity": 1 }
+      ],
+      "promo": { "code": "SAVE10", "type": "PERCENTAGE", "value": 10, "minSpendCents": 0 },
+      "expected": { "subtotal": 1045250, "discount": 104525, "shipping": 0, "total": 940725 }
+    },
+    {
+      "id": "PRICE-023",
+      "name": "fifteen percent, an odd rate that rounds down",
+      "lines": [{ "sku": "R1", "unitPriceCents": 123450, "quantity": 1 }],
+      "promo": { "code": "ENDSTODAY", "type": "PERCENTAGE", "value": 15, "minSpendCents": 0 },
+      "expected": { "subtotal": 123450, "discount": 18518, "shipping": 35000, "total": 139932 }
+    },
+    {
+      "id": "PRICE-024",
+      "name": "five percent on an amount that rounds up at exactly one half",
+      "lines": [{ "sku": "R1", "unitPriceCents": 4010, "quantity": 1 }],
+      "promo": { "code": "DEAD5", "type": "PERCENTAGE", "value": 5, "minSpendCents": 0 },
+      "expected": { "subtotal": 4010, "discount": 201, "shipping": 35000, "total": 38809 }
+    },
+    {
+      "id": "PRICE-025",
+      "name": "a large multi-line order, free shipping, percentage promo",
+      "lines": [
+        { "sku": "ELEC-HP245-8512", "unitPriceCents": 6850000, "quantity": 1 },
+        { "sku": "ELEC-RN13-128G", "unitPriceCents": 2450000, "quantity": 2 }
+      ],
+      "promo": { "code": "SAVE25", "type": "PERCENTAGE", "value": 25, "minSpendCents": 300000 },
+      "expected": { "subtotal": 11750000, "discount": 2937500, "shipping": 0, "total": 8812500 }
+    }
+  ]
+}

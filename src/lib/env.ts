@@ -9,6 +9,9 @@ const envSchema = z.object({
   AUTH_SECRET: z.string().min(32, 'AUTH_SECRET must be at least 32 characters'),
   AUTH_URL: z.string().url().optional(),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  // Enables the test-support routes when set. Never set in production; the routes
+  // refuse to act there regardless.
+  TEST_SUPPORT_TOKEN: z.string().min(16).optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

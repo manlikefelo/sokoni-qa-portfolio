@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 import { getOrCreateCart, setAppliedPromoCode, readAppliedPromoCode } from '@/lib/cart';
 import { validatePromo } from '@/lib/promo';
 import { priceCart } from '@/lib/pricing';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, resetRateLimit } from '@/lib/rate-limit';
 import { getRequestIp } from '@/lib/request-ip';
 import {
   addToCartSchema,
@@ -131,6 +131,12 @@ export async function applyPromoAction(formData: FormData): Promise<ActionResult
   const result = validatePromo(promo, subtotalCents, new Date());
 
   if (!result.ok) return { ok: false, message: result.message };
+
+  // The limiter exists to stop someone grinding through candidate codes, so a
+  // successful application clears the bucket — the same treatment a successful login
+  // gets. Without this an honest shopper who applies a valid code on ten separate
+  // orders is locked out of applying an eleventh.
+  resetRateLimit(`promo:${ip}`);
 
   await setAppliedPromoCode(result.promo.code);
   revalidatePath('/cart');
