@@ -8,13 +8,17 @@ export type PromoRejection =
 export type PromoValidation =
   { ok: true; promo: AppliedPromo } | { ok: false; reason: PromoRejection; message: string };
 
+/** Truncates a timestamp to midnight UTC so expiry compares whole days. */
+function startOfUtcDay(value: Date): number {
+  return Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate());
+}
+
 /**
- * Expiry is exclusive: a code is valid right up to the instant in expiresAt and
- * invalid from that instant onward. Comparison is on the full UTC timestamp, so a
- * code expiring at 23:59:59 today is still good for the rest of today.
+ * A code is valid until its expiry date. Comparison is made on the calendar date
+ * rather than the exact timestamp.
  */
 export function isExpired(promo: Pick<PromoCode, 'expiresAt'>, now: Date): boolean {
-  return promo.expiresAt.getTime() <= now.getTime();
+  return startOfUtcDay(promo.expiresAt) <= startOfUtcDay(now);
 }
 
 export function validatePromo(
