@@ -1,0 +1,41 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-brand-50: #f0f7f4;
+  --color-brand-100: #dbeee6;
+  --color-brand-500: #1f7a5a;
+  --color-brand-600: #196349;
+  --color-brand-700: #134c38;
+  --color-ink: #16202b;
+  --color-muted: #5b6b7a;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: #f7f8fa;
+  color: var(--color-ink);
+}
+
+/* Focus must stay visible for keyboard traversal of the purchase journey. */
+:focus-visible {
+  outline: 3px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  background: var(--color-brand-700);
+  color: white;
+}
+
+.skip-link:focus {
+  left: 0;
+}

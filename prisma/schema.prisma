@@ -1,0 +1,167 @@
+// Sokoni data model. SQLite locally and in CI; every construct here is also valid
+// on Postgres so the provider can be switched without touching the model bodies.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         Role      @default(CUSTOMER)
+  createdAt    DateTime  @default(now())
+  addresses    Address[]
+  orders       Order[]
+  cart         Cart?
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String
+  slug     String    @unique
+  products Product[]
+}
+
+model Product {
+  id             String    @id @default(cuid())
+  name           String
+  slug           String    @unique
+  description    String
+  // Lowercased name + description, maintained on write. SQLite has no
+  // case-insensitive `contains`, so search compares against this column.
+  searchText     String    @default("")
+  categoryId     String
+  basePriceCents Int
+  imageUrl       String
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  category       Category  @relation(fields: [categoryId], references: [id])
+  variants       Variant[]
+
+  @@index([categoryId])
+}
+
+model Variant {
+  id         String      @id @default(cuid())
+  productId  String
+  name       String
+  sku        String      @unique
+  priceCents Int
+  stockQty   Int
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([productId])
+}
+
+model Cart {
+  id         String     @id @default(cuid())
+  userId     String?    @unique
+  guestToken String?    @unique
+  updatedAt  DateTime   @updatedAt
+  user       User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items      CartItem[]
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  variantId String
+  quantity  Int
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant   Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, variantId])
+  @@index([cartId])
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  userId     String
+  line1      String
+  line2      String?
+  city       String
+  county     String
+  postalCode String
+  phone      String
+  isDefault  Boolean @default(false)
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PromoCode {
+  id            String       @id @default(cuid())
+  code          String       @unique
+  type          DiscountType
+  value         Int
+  minSpendCents Int          @default(0)
+  expiresAt     DateTime
+  maxUses       Int?
+  usedCount     Int          @default(0)
+  isActive      Boolean      @default(true)
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  userId          String?
+  guestEmail      String?
+  status          OrderStatus @default(PENDING)
+  subtotalCents   Int
+  discountCents   Int
+  shippingCents   Int
+  totalCents      Int
+  promoCode       String?
+  shippingAddress String
+  idempotencyKey  String      @unique
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  user            User?       @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id             String  @id @default(cuid())
+  orderId        String
+  variantId      String
+  productName    String
+  variantName    String
+  unitPriceCents Int
+  quantity       Int
+  lineTotalCents Int
+  order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant        Variant @relation(fields: [variantId], references: [id])
+
+  @@index([orderId])
+}
