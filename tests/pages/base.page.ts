@@ -1,0 +1,65 @@
+import type { Locator, Page } from '@playwright/test';
+
+/**
+ * Shared behaviour for every page object.
+ *
+ * Locators live only in these classes. A spec never writes a selector, which means a
+ * markup change is fixed in one file rather than across the suite.
+ */
+export abstract class BasePage {
+  constructor(protected readonly page: Page) {}
+
+  get cartCount(): Locator {
+    return this.page.getByTestId('cart-count');
+  }
+
+  get cartLink(): Locator {
+    return this.page.getByTestId('nav-cart');
+  }
+
+  get loginLink(): Locator {
+    return this.page.getByTestId('nav-login');
+  }
+
+  get accountLink(): Locator {
+    return this.page.getByTestId('nav-account');
+  }
+
+  get adminLink(): Locator {
+    return this.page.getByTestId('nav-admin');
+  }
+
+  get logoutButton(): Locator {
+    return this.page.getByTestId('logout-btn');
+  }
+
+  get errorBanner(): Locator {
+    return this.page.getByTestId('error-banner');
+  }
+
+  get notFound(): Locator {
+    return this.page.getByTestId('not-found');
+  }
+
+  get mobileNavToggle(): Locator {
+    return this.page.getByTestId('mobile-nav-toggle');
+  }
+
+  get mobileNavPanel(): Locator {
+    return this.page.getByTestId('mobile-nav-panel');
+  }
+
+  /** Reads the header cart badge as a number. */
+  async getCartCount(): Promise<number> {
+    const text = await this.cartCount.innerText();
+    return Number(text.trim());
+  }
+
+  async goToCart(): Promise<void> {
+    await this.cartLink.click();
+  }
+
+  async logout(): Promise<void> {
+    await this.logoutButton.click();
+  }
+}

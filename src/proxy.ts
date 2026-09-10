@@ -3,7 +3,8 @@ import { getToken } from '@auth/core/jwt';
 import { env, isProduction } from '@/lib/env';
 
 /**
- * Route gating that has to be settled before a response is streamed.
+ * Route gating that has to be settled before a response is streamed. Next.js calls
+ * this the proxy convention; it runs ahead of the route handlers.
  *
  * Next.js streams dynamic routes, which means the response status is committed
  * before a `notFound()` deeper in the tree can influence it: the not-found UI
@@ -18,7 +19,7 @@ import { env, isProduction } from '@/lib/env';
 
 const SESSION_COOKIE = isProduction ? '__Secure-sokoni.session' : 'sokoni.session';
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const token = await getToken({

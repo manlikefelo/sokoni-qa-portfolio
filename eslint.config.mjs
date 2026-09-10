@@ -22,6 +22,15 @@ const config = [
     rules: { 'no-console': 'off' },
   },
   {
+    // Playwright fixtures take a callback conventionally named `use`, which the React
+    // rules-of-hooks check mistakes for React's `use` hook. No React here.
+    files: ['tests/**/*.ts'],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+      'no-console': 'off',
+    },
+  },
+  {
     ignores: [
       '.next/**',
       'node_modules/**',

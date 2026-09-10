@@ -32,6 +32,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Pin the trace root to this project. Without it Next.js walks up to the home
+  // directory, finds an unrelated lockfile there and warns on every build.
+  outputFileTracingRoot: import.meta.dirname,
   reactStrictMode: true,
   poweredByHeader: false,
   agentRules: false,
