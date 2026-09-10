@@ -74,7 +74,7 @@ export function LoginForm({ redirectTo = '/account' }: { redirectTo?: string }) 
         <Link
           href="/register"
           data-testid="login-register-link"
-          className="text-brand-600 hover:underline"
+          className="text-brand-600 underline"
         >
           Register
         </Link>
@@ -154,11 +154,7 @@ export function RegisterForm() {
 
       <p className="text-muted text-sm">
         Already registered?{' '}
-        <Link
-          href="/login"
-          data-testid="register-login-link"
-          className="text-brand-600 hover:underline"
-        >
+        <Link href="/login" data-testid="register-login-link" className="text-brand-600 underline">
           Sign in
         </Link>
       </p>
