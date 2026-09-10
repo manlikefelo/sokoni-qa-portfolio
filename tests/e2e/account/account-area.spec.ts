@@ -3,6 +3,7 @@ import { USERS } from '../../fixtures/users';
 import { testDb, createOrderFor } from '../../fixtures/db';
 import { LoginPage, RegisterPage } from '../../pages/login.page';
 import { AccountPage } from '../../pages/account.page';
+import { resetRateLimits } from '../../fixtures/rate-limit';
 
 /**
  * Order history, ownership and the address book, per PRD 4.7.
@@ -132,7 +133,11 @@ test.describe('SK-ACC — profile', () => {
   test('SK-ACC-054 a valid password change succeeds and the new password works', async ({
     browser,
     workerPrefix,
+    baseURL,
   }) => {
+    // Registers once and signs in three times, which is enough under --repeat-each to
+    // reach the login limit from a shared IP.
+    await resetRateLimits(baseURL ?? 'http://localhost:3000');
     const email = `${workerPrefix}-pwchange-${Date.now()}@example.com`;
     const original = 'OriginalPass2026';
     const replacement = 'ReplacementPass2026';

@@ -139,7 +139,12 @@ test.describe('SK-ACC — sign in', () => {
     await resetRateLimits(baseURL ?? 'http://localhost:3000');
   });
 
-  test('SK-ACC-020 valid credentials sign the user in', async ({ loginPage, accountPage }) => {
+  test('SK-ACC-020 valid credentials sign the user in', async ({
+    loginPage,
+    accountPage,
+    baseURL,
+  }) => {
+    await resetRateLimits(baseURL ?? 'http://localhost:3000');
     await loginPage.goto();
     await loginPage.signIn(USERS.customer.email, USERS.customer.password);
     await loginPage.waitForUrl(/\/account$/);
@@ -171,25 +176,51 @@ test.describe('SK-ACC — sign in', () => {
    * The no-enumeration requirement, asserted directly: the two failure messages must
    * be byte-identical.
    */
-  test('SK-ACC-023 both failure messages are identical', async ({ loginPage }) => {
+  test('SK-ACC-023 both failure messages are identical', async ({ loginPage, baseURL }) => {
+    const url = baseURL ?? 'http://localhost:3000';
+
+    /**
+     * The buckets are cleared immediately before each attempt rather than once for the
+     * test.
+     *
+     * Under --repeat-each this test originally compared two *rate-limit* notices
+     * instead of two credential failures, and those carry a countdown: "try again in
+     * 734 seconds" against "733 seconds". The assertion failed on a one-second
+     * difference between two messages that were both correct.
+     *
+     * The limiter is behaving properly — this test simply has to guarantee it is
+     * looking at the message it claims to be looking at.
+     */
+    await resetRateLimits(url);
     await loginPage.goto();
     const wrongPassword = await loginPage.signInExpectingFailure(
       USERS.customer.email,
       'DefinitelyWrong2026',
     );
 
+    await resetRateLimits(url);
     await loginPage.goto();
     const unknownEmail = await loginPage.signInExpectingFailure(
       'nobody-at-all@example.com',
       'DefinitelyWrong2026',
     );
 
+    expect(
+      wrongPassword,
+      'this test must compare credential failures, not rate-limit notices',
+    ).not.toMatch(/too many attempts/i);
     expect(unknownEmail, 'a wrong password and an unknown email must be indistinguishable').toBe(
       wrongPassword,
     );
   });
 
-  test('SK-ACC-024 signing out ends the session', async ({ loginPage, accountPage, page }) => {
+  test('SK-ACC-024 signing out ends the session', async ({
+    loginPage,
+    accountPage,
+    page,
+    baseURL,
+  }) => {
+    await resetRateLimits(baseURL ?? 'http://localhost:3000');
     await loginPage.goto();
     await loginPage.signIn(USERS.customer.email, USERS.customer.password);
     await loginPage.waitForUrl(/\/account$/);
@@ -219,10 +250,19 @@ test.describe('SK-ACC — sign in', () => {
 /**
  * Rate limiting on sign-in, per PRD 7: ten attempts per fifteen minutes per IP.
  *
- * Serialised and with its own bucket reset, since it deliberately exhausts the limit
- * and would otherwise affect anything running beside it.
+ * This spec deliberately exhausts a shared, process-wide limiter. Everything in the
+ * suite shares one IP, so while it runs, any other spec that signs in or registers is
+ * liable to be refused — and clearing the bucket in a neighbour's beforeEach does not
+ * help, because this spec refills it immediately afterwards.
+ *
+ * Marked @serial-global and excluded from the default run for that reason. It is
+ * executed as its own step in CI, after the parallel suite has finished, where it has
+ * the limiter to itself. Running it inside the parallel suite produced exactly the kind
+ * of cross-spec interference the reliability rules forbid — it was found under
+ * --repeat-each, where the doubled attempt count made the collision certain rather than
+ * occasional.
  */
-test.describe('SK-ACC — sign-in rate limiting', () => {
+test.describe('SK-ACC — sign-in rate limiting @serial-global', () => {
   test.describe.configure({ mode: 'serial' });
 
   test('SK-ACC-030 repeated failures are eventually rate limited', async ({

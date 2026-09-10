@@ -214,3 +214,65 @@ These waited for the success banner, which is unmounted along with the status fo
 the page re-renders showing "no further changes are possible". The transition had
 succeeded; the witness had disappeared. Now asserted against the persisted status, with
 the banner check replaced by a check that no _error_ is shown.
+
+## Reliability pass — `--repeat-each=2`
+
+The suite was green across every area before this, so running each test twice was
+expected to be a formality. It was not: 11 tests failed that had passed consistently in
+a single run. All 11 were the suite's fault, not the application's.
+
+### The rate limiter under parallelism
+
+Every failure traced to one cause. Login, registration and promo application allow ten
+attempts per fifteen minutes **per IP**, and every worker in the suite presents the same
+address. Doubling the test count doubled the attempts, and the specs started refusing
+each other.
+
+Three attempts at fixing it, and the first two were wrong in instructive ways.
+
+**Attempt one — reset in `beforeEach`.** Worked in a single run and failed under repeat.
+A parallel worker can consume the whole allowance between one test's reset and its
+submission. The window is small, which is exactly what makes it a bad fix: it converts a
+consistent failure into an intermittent one.
+
+**Attempt two — reset immediately before the action, inside the page object.** Narrower
+window, same race. Still failing. At this point the pattern was clear: no amount of
+resetting fixes contention over a shared counter, it only makes the collision rarer.
+That is the shape of a fix that will come back as flakiness later.
+
+**Attempt three — give each worker its own bucket.** The application already keys the
+limiter on `x-forwarded-for`, which it reads as untrusted input used only as a bucket
+key. A worker-scoped fixture now sets that header to `10.0.0.{workerIndex}`, so each
+worker has its own allowance and there is no contention to race over. No application
+change, no resets in the page objects, and the limiter stays at production strength.
+
+`SK-ACC-030`, which deliberately exhausts the limiter, still needs a single shared
+bucket and must not run beside anything that signs in. It is tagged `@serial-global`,
+excluded from the parallel run, and executed as its own CI step afterwards.
+
+### A bad assertion the repeat run exposed
+
+`SK-ACC-023` asserts that a wrong password and an unknown email produce identical
+messages. Under repeat it failed comparing:
+
+```
+Expected: "Too many attempts. Try again in 734 seconds."
+Received: "Too many attempts. Try again in 733 seconds."
+```
+
+Both messages were correct. The test was comparing two rate-limit notices rather than
+two credential failures, and those carry a live countdown. The assertion now checks it is
+looking at a credential failure before comparing, so it cannot silently pass or fail on
+the wrong pair of strings.
+
+### A filter that silently ran nothing
+
+Tagging the rate-limit spec and excluding it with `grepInvert` in the config broke the
+command that was supposed to run it: a `grepInvert` in the config takes precedence over
+`--grep` on the command line, so `--grep @serial-global` matched nothing and Playwright
+reported "No tests found".
+
+That is the `forceStatus` problem again in a different guise — a command that appears to
+run a test and runs none. Both filters are now driven by a `SERIAL_ONLY` environment
+variable so the two modes are mutually exclusive by construction, and the script was run
+to confirm it selects exactly one test rather than zero.

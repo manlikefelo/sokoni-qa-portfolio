@@ -52,6 +52,13 @@ jobs:
       - run: npm run build
       - name: Run Playwright
         run: npx playwright test --project="${{ matrix.project }}"
+
+      # Run after the parallel suite, because it exhausts the process-wide rate
+      # limiter and cannot share the application with anything else.
+      - name: Rate-limit specs, in isolation
+        env:
+          SERIAL_ONLY: '1'
+        run: npx playwright test --project="${{ matrix.project }}" --workers=1
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4

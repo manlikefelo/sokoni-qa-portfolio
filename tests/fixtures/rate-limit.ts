@@ -14,8 +14,10 @@ import { request as playwrightRequest } from '@playwright/test';
  */
 const TOKEN = process.env.TEST_SUPPORT_TOKEN ?? 'local-test-support-token-value';
 
-export async function resetRateLimits(baseURL: string): Promise<void> {
-  const context = await playwrightRequest.newContext({ baseURL });
+export async function resetRateLimits(urlOrBaseUrl: string): Promise<void> {
+  // Accepts either a baseURL or any page URL, so a page object can pass what it has.
+  const origin = new URL(urlOrBaseUrl).origin;
+  const context = await playwrightRequest.newContext({ baseURL: origin });
   try {
     const response = await context.post('/api/test-support/reset-rate-limit', {
       headers: { 'x-test-support-token': TOKEN },

@@ -39,6 +39,29 @@ export const test = base.extend<Pages, WorkerFixtures>({
     { scope: 'worker' },
   ],
 
+  /**
+   * Every request from a worker carries an x-forwarded-for address unique to that
+   * worker, which the application already honours when keying its rate limiter.
+   *
+   * This is what makes the limiter workable under parallelism. Login, registration and
+   * promo application allow ten attempts per fifteen minutes per IP, and the whole
+   * suite would otherwise share one bucket: eight registration specs under
+   * --repeat-each is sixteen attempts, and they start refusing each other. Clearing the
+   * bucket between tests does not fix it, because a parallel worker can consume the
+   * allowance between the reset and the submission — an inherent race, and chasing it
+   * with more resets only narrows the window.
+   *
+   * Giving each worker its own address removes the contention instead of papering over
+   * it. The limiter itself is untouched, still at production strength, and is tested at
+   * its boundary by SK-ACC-030 — which runs alone, with the real shared bucket.
+   */
+  extraHTTPHeaders: [
+    async ({ workerPrefix }, use) => {
+      await use({ 'x-forwarded-for': `10.0.0.${10 + Number(workerPrefix.slice(1))}` });
+    },
+    { scope: 'test' },
+  ],
+
   cataloguePage: async ({ page }, use) => {
     await use(new CataloguePage(page));
   },

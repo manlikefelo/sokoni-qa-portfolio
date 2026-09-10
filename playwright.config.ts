@@ -15,6 +15,19 @@ export default defineConfig({
    */
   retries: 0,
 
+  /**
+   * Specs tagged @serial-global exhaust a process-wide resource — currently just the
+   * rate limiter — and cannot share the application with a parallel suite, so they are
+   * excluded from the default run and executed separately afterwards.
+   *
+   * Driven by an environment variable rather than a bare `grepInvert`, because a
+   * `grepInvert` in the config wins over `--grep` on the command line: with the filter
+   * hard-coded, `--grep @serial-global` matched nothing and silently ran zero tests.
+   * `npm run test:serial` sets SERIAL_ONLY to invert the selection.
+   */
+  grep: process.env.SERIAL_ONLY ? /@serial-global/ : undefined,
+  grepInvert: process.env.SERIAL_ONLY ? undefined : /@serial-global/,
+
   fullyParallel: true,
   workers: process.env.CI ? 2 : undefined,
   forbidOnly: Boolean(process.env.CI),

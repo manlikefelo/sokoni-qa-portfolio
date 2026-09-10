@@ -1,6 +1,7 @@
 import { test, expect } from '../../fixtures/base';
 import { USERS } from '../../fixtures/users';
 import { clearUserCart, seedUserCart, variantBySku, setStock, stockOf } from '../../fixtures/db';
+import { resetRateLimits } from '../../fixtures/rate-limit';
 
 /**
  * Cart merge on login, per PRD 4.3:
@@ -24,7 +25,14 @@ const C = 'HOME-NX18-STL'; // user only
 test.describe('SK-CART — merge on login', () => {
   test.describe.configure({ mode: 'serial' });
 
-  test.beforeEach(async () => {
+  /**
+   * Every spec here signs in through the form, and SK-CART-045 signs in twice. Under
+   * --repeat-each that is enough attempts to trip the ten-per-fifteen-minutes login
+   * limiter, so the buckets are cleared before each test. The limiter stays at
+   * production strength and is tested at its boundary by SK-ACC-030.
+   */
+  test.beforeEach(async ({ baseURL }) => {
+    await resetRateLimits(baseURL ?? 'http://localhost:3000');
     await clearUserCart(USERS.customer.email);
   });
 
