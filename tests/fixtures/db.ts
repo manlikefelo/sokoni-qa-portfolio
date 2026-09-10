@@ -9,6 +9,11 @@ import { PrismaClient, type Prisma } from '@prisma/client';
  */
 export const testDb = new PrismaClient();
 
+/**
+ * The category every fixture product belongs to, kept out of catalogue assertions.
+ */
+export const FIXTURE_CATEGORY_SLUG = 'qa-fixtures';
+
 export interface SeedCounts {
   products: number;
   variants: number;
@@ -24,12 +29,22 @@ export const EXPECTED_SEED: SeedCounts = {
   singleStockVariants: 7,
 };
 
+/**
+ * Counts only the seeded catalogue, excluding the fixture category.
+ *
+ * Other specs create products while this runs, so an unqualified count is a moving
+ * target — the first version of this helper counted everything and failed in a full
+ * parallel run while passing in isolation.
+ */
 export async function countSeed(): Promise<SeedCounts> {
+  const seeded = { category: { slug: { notIn: [FIXTURE_CATEGORY_SLUG] } } };
+  const seededVariant = { product: seeded };
+
   const [products, variants, zeroStockVariants, singleStockVariants] = await Promise.all([
-    testDb.product.count(),
-    testDb.variant.count(),
-    testDb.variant.count({ where: { stockQty: 0 } }),
-    testDb.variant.count({ where: { stockQty: 1 } }),
+    testDb.product.count({ where: seeded }),
+    testDb.variant.count({ where: seededVariant }),
+    testDb.variant.count({ where: { ...seededVariant, stockQty: 0 } }),
+    testDb.variant.count({ where: { ...seededVariant, stockQty: 1 } }),
   ]);
   return { products, variants, zeroStockVariants, singleStockVariants };
 }
@@ -70,6 +85,28 @@ export async function resetPromoUsage(code: string, usedCount = 0): Promise<void
  * instead, so they cannot disturb the shared set or each other. The trade-off is
  * discussed in docs/TEST_STRATEGY.md.
  */
+/**
+ * The category every fixture product belongs to.
+ *
+ * Fixture products live in their own category so that catalogue specs, which assert
+ * against whole-catalogue counts, can exclude them. Without this a spec creating a
+ * product for its own purposes changes the catalogue size underneath a pagination or
+ * filter assertion running in a different worker at the same time — an order-dependent
+ * failure that passes in isolation and fails in a full run. See
+ * docs/TRIAGE_NOTES.md.
+ */
+
+/** Creates the fixture category on demand, so no seed change is needed. */
+async function ensureFixtureCategory(): Promise<string> {
+  const existing = await testDb.category.findUnique({ where: { slug: FIXTURE_CATEGORY_SLUG } });
+  if (existing) return existing.id;
+
+  const created = await testDb.category.create({
+    data: { name: 'QA Fixtures', slug: FIXTURE_CATEGORY_SLUG },
+  });
+  return created.id;
+}
+
 export async function createScopedProduct(options: {
   prefix: string;
   name: string;
@@ -78,9 +115,9 @@ export async function createScopedProduct(options: {
   description?: string;
   categorySlug?: string;
 }) {
-  const category = await testDb.category.findFirstOrThrow({
-    where: options.categorySlug ? { slug: options.categorySlug } : {},
-  });
+  const categoryId = options.categorySlug
+    ? (await testDb.category.findFirstOrThrow({ where: { slug: options.categorySlug } })).id
+    : await ensureFixtureCategory();
 
   const slug = `${options.prefix}-${options.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   const description = options.description ?? `Fixture product for ${options.prefix}.`;
@@ -91,7 +128,7 @@ export async function createScopedProduct(options: {
       slug,
       description,
       searchText: `${options.name} ${description}`.toLowerCase(),
-      categoryId: category.id,
+      categoryId,
       basePriceCents: options.priceCents,
       imageUrl: '/products/leather-bifold-wallet.svg',
       isActive: true,

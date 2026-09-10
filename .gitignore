@@ -14,3 +14,8 @@ playwright/.auth
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts
+
+# Scratch output from ad-hoc reporter runs
+*.tmp.json
+*.tmp.ts
+*.tmp.mjs

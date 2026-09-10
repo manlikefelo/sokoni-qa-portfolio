@@ -1,5 +1,8 @@
 import { test, expect } from '../../fixtures/base';
 import { testDb } from '../../fixtures/db';
+import { CataloguePage } from '../../pages/catalogue.page';
+
+const SEED_CATEGORIES = [...CataloguePage.SEED_CATEGORIES];
 
 /**
  * Filters, per PRD 4.1: category multi-select, price range with both bounds
@@ -38,7 +41,9 @@ test.describe('SK-CAT — catalogue filters', () => {
     cataloguePage,
     page,
   }) => {
-    await cataloguePage.goto();
+    // Starts from an unfiltered view so that ticking one box narrows the set rather
+    // than adding to an existing selection.
+    await cataloguePage.goto({ categories: [] });
     await cataloguePage.toggleCategory('fashion');
 
     expect(page.url()).toContain('category=fashion');
@@ -58,7 +63,11 @@ test.describe('SK-CAT — catalogue filters', () => {
     await cataloguePage.goto({ minPriceShillings: 3450, sort: 'price-asc' });
 
     const expected = await testDb.product.count({
-      where: { isActive: true, variants: { some: { priceCents: { gte: 345_000 } } } },
+      where: {
+        isActive: true,
+        category: { slug: { in: SEED_CATEGORIES } },
+        variants: { some: { priceCents: { gte: 345_000 } } },
+      },
     });
     expect(
       await cataloguePage.totalMatches(),
@@ -75,7 +84,11 @@ test.describe('SK-CAT — catalogue filters', () => {
     cataloguePage,
   }) => {
     const expected = await testDb.product.count({
-      where: { isActive: true, variants: { some: { priceCents: { lte: 345_000 } } } },
+      where: {
+        isActive: true,
+        category: { slug: { in: SEED_CATEGORIES } },
+        variants: { some: { priceCents: { lte: 345_000 } } },
+      },
     });
 
     await cataloguePage.goto({ maxPriceShillings: 3450, sort: 'price-asc' });
@@ -110,6 +123,7 @@ test.describe('SK-CAT — catalogue filters', () => {
     const expected = await testDb.product.count({
       where: {
         isActive: true,
+        category: { slug: { in: SEED_CATEGORIES } },
         AND: [
           { variants: { some: { priceCents: { gte: 165_000 } } } },
           { variants: { some: { priceCents: { lte: 345_000 } } } },
@@ -137,7 +151,11 @@ test.describe('SK-CAT — catalogue filters', () => {
     expect(slugs).not.toContain('von-hotpoint-microwave-oven-20l');
 
     const expected = await testDb.product.count({
-      where: { isActive: true, variants: { some: { stockQty: { gt: 0 } } } },
+      where: {
+        isActive: true,
+        category: { slug: { in: SEED_CATEGORIES } },
+        variants: { some: { stockQty: { gt: 0 } } },
+      },
     });
     expect(await cataloguePage.totalMatches()).toBe(expected);
   });

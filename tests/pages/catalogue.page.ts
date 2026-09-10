@@ -11,6 +11,8 @@ export interface CatalogueFilters {
   inStockOnly?: boolean;
   sort?: SortOption;
   page?: number;
+  /** Opt out of the default seeded-category filter, to see fixture products too. */
+  allCategories?: boolean;
 }
 
 export class CataloguePage extends BasePage {
@@ -91,14 +93,28 @@ export class CataloguePage extends BasePage {
   }
 
   /**
+   * The three categories the seed creates. Other specs create fixture products in a
+   * separate "qa-fixtures" category, so filtering to these keeps whole-catalogue
+   * assertions stable regardless of what else is running in parallel.
+   */
+  static readonly SEED_CATEGORIES = ['electronics', 'home-kitchen', 'fashion'] as const;
+
+  /**
    * Navigates straight to a filtered view by URL. Preferred over clicking the
    * controls when the spec is about the result set rather than about the controls,
    * because it removes a whole class of interaction timing from the test.
+   *
+   * When no category is named the three seeded categories are applied, which excludes
+   * fixture products created by other specs. Pass `allCategories: true` to see
+   * everything.
    */
   async goto(filters: CatalogueFilters = {}): Promise<void> {
     const params = new URLSearchParams();
     if (filters.q) params.set('q', filters.q);
-    for (const category of filters.categories ?? []) params.append('category', category);
+
+    const categories =
+      filters.categories ?? (filters.allCategories ? [] : [...CataloguePage.SEED_CATEGORIES]);
+    for (const category of categories) params.append('category', category);
     if (filters.minPriceShillings !== undefined) {
       params.set('minPrice', String(filters.minPriceShillings * 100));
     }

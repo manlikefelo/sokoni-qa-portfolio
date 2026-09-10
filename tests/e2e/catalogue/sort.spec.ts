@@ -1,5 +1,8 @@
 import { test, expect } from '../../fixtures/base';
 import { testDb } from '../../fixtures/db';
+import { CataloguePage } from '../../pages/catalogue.page';
+
+const SEED_CATEGORIES = [...CataloguePage.SEED_CATEGORIES];
 
 /**
  * Sorting, per PRD 4.1: newest, price ascending, price descending, name A–Z.
@@ -51,7 +54,7 @@ test.describe('SK-CAT — sorting', () => {
     cataloguePage,
   }) => {
     const newest = await testDb.product.findFirstOrThrow({
-      where: { isActive: true },
+      where: { isActive: true, category: { slug: { in: SEED_CATEGORIES } } },
       orderBy: { createdAt: 'desc' },
     });
 
