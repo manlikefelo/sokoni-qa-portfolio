@@ -25,12 +25,6 @@ export function toCategoryList(value: string | string[] | undefined): string[] {
 function buildWhere(query: CatalogueQuery): Prisma.ProductWhereInput {
   const conditions: Prisma.ProductWhereInput[] = [{ isActive: true }];
 
-  if (query.q) {
-    // searchText holds a lowercased copy of the name and description, so a
-    // lowercased needle gives case-insensitive partial matching on SQLite.
-    conditions.push({ searchText: { contains: query.q.toLowerCase() } });
-  }
-
   const categories = toCategoryList(query.category);
   if (categories.length > 0) {
     conditions.push({ category: { slug: { in: categories } } });
@@ -66,8 +60,41 @@ function buildOrderBy(sort: CatalogueQuery['sort']): Prisma.ProductOrderByWithRe
   }
 }
 
+/**
+ * Narrows a set of products to those whose name or description contains the search
+ * term. Applied in application code because the search term is matched against the
+ * product copy rather than a dedicated index.
+ */
+function matchesSearch(product: ProductListItem, term: string): boolean {
+  return product.name.includes(term) || product.description.includes(term);
+}
+
 export async function findProducts(query: CatalogueQuery): Promise<CatalogueResult> {
   const where = buildWhere(query);
+
+  // With a search term the filtered set has to be assembled before it can be
+  // counted and paged, since the match is not expressible in the query itself.
+  if (query.q) {
+    const term = query.q;
+    const candidates = await db.product.findMany({
+      where,
+      include: listInclude,
+      orderBy: buildOrderBy(query.sort),
+    });
+
+    const matched = candidates.filter((product) => matchesSearch(product, term));
+    const totalCount = matched.length;
+    const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+    const page = Math.min(query.page, pageCount);
+
+    return {
+      products: matched.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE),
+      totalCount,
+      pageCount,
+      page,
+    };
+  }
+
   const totalCount = await db.product.count({ where });
   const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const page = Math.min(query.page, pageCount);
