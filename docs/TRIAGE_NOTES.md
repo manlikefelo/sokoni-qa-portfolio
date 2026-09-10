@@ -165,3 +165,52 @@ validation, which is what it claimed to be about.
 Having hit this twice, it is worth stating as a rule: if a browser-level constraint can
 reject the input first, a UI test cannot prove the server also rejects it. Pick input
 the browser accepts, or move the test to the API layer.
+
+## Account specs — first run
+
+17 of 32 passed first time; the rest exposed one infrastructure mistake of mine and
+nothing wrong with the application.
+
+| Failure                            | Verdict      | Cause                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SK-ACC-066 and everything after it | **bad test** | The address-book reset helper removed every address _except_ the seeded one, assuming it was still present. SK-ACC-065 deliberately deletes the default to prove another is promoted, so after that spec ran the account had no addresses at all and every later spec failed for an unrelated reason. Now the helper deletes everything and recreates the seeded address, which is idempotent regardless of what ran before. |
+
+Everything else passed, including the two assertions worth calling out: registration
+stores an argon2id hash and never the plaintext, and the wrong-password and
+unknown-email messages are byte-identical.
+
+## Admin specs — first run
+
+| Failure                                      | Verdict                        | Evidence                                                                                                                                      |
+| -------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 18 illegal transitions, SK-ADM-100 to 205    | defect                         | Every transition the lifecycle forbids is accepted. `PENDING` to `SHIPPED` stored as `SHIPPED`; `DELIVERED` to `PENDING` stored as `PENDING`. |
+| 7 legal transitions to a terminal status     | **bad test**                   | See below.                                                                                                                                    |
+| DELIVERED and CANCELLED cases, first attempt | **bad test, and a false pass** | See below.                                                                                                                                    |
+
+### A test that could not fail
+
+The first version of `forceStatus` handled terminal statuses by building a fresh
+`<form>` in the page and submitting it. That form was never bound to a server action,
+so it posted nowhere — and the test then read the order back, found it unchanged, and
+reported a pass.
+
+Six tests were green while testing nothing at all. That is worse than a failing test
+and worse than no test, because it is indistinguishable from real coverage on a report.
+It surfaced only because its neighbours were failing and the contrast looked wrong: the
+seeded defect accepts every illegal transition, so `DELIVERED → PENDING` passing while
+`PENDING → SHIPPED` failed made no sense.
+
+Rewritten so `forceStatus` returns whether it actually submitted, and the test asserts
+on that before asserting anything else. Terminal statuses are now handled by borrowing
+the form from a non-terminal order and retargeting its hidden order id, so a real,
+action-bound request reaches the server naming a terminal order.
+
+The general lesson: a negative assertion needs proof that the thing being refused was
+genuinely attempted. "Nothing changed" is not evidence when nothing was sent.
+
+### Legal transitions into a terminal status
+
+These waited for the success banner, which is unmounted along with the status form when
+the page re-renders showing "no further changes are possible". The transition had
+succeeded; the witness had disappeared. Now asserted against the persisted status, with
+the banner check replaced by a check that no _error_ is shown.

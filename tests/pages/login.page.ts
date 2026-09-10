@@ -82,6 +82,10 @@ export class RegisterPage extends BasePage {
     return this.page.getByTestId('register-error');
   }
 
+  get loginLinkFromRegister(): Locator {
+    return this.page.getByTestId('register-login-link');
+  }
+
   fieldError(field: string): Locator {
     return this.page.getByTestId(`field-error-${field}`);
   }

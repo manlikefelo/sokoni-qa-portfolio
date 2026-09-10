@@ -178,11 +178,102 @@ export class AdminPage extends BasePage {
     return this.statusSelect.locator('option').allInnerTexts();
   }
 
+  /**
+   * Changes the order's status and waits for the outcome.
+   *
+   * A move into a terminal status is a special case: the revalidated page replaces the
+   * status form with the "no further changes" notice, so the success banner is unmounted
+   * along with the form it lived in. Waiting only for the banner therefore times out on
+   * a transition that actually succeeded. The terminal notice and the current-status
+   * readout are both accepted as evidence the request was handled.
+   */
   async changeStatus(target: OrderStatus): Promise<void> {
     await this.statusSelect.selectOption(target);
     await this.statusSubmit.click();
     await this.page
-      .locator('[data-testid="status-success"], [data-testid="status-error"]')
+      .locator(
+        '[data-testid="status-success"], [data-testid="status-error"], [data-testid="status-terminal"]',
+      )
+      .first()
+      .waitFor({ state: 'visible' });
+  }
+
+  /**
+   * Submits a status the dropdown does not offer, by reusing the form the page already
+   * rendered and only widening its options.
+   *
+   * The admin UI lists just the transitions that are legal from the current status, so
+   * an illegal one cannot be selected normally. Adding the option to the real select
+   * and submitting the real form is how a determined user would do it, and the server
+   * must refuse anyway.
+   *
+   * Returns false when the page rendered no form at all, which is the case for a
+   * terminal status. A caller must decide what that means rather than being handed a
+   * silent success — an earlier version of this method built a detached form instead,
+   * which submitted nowhere and made every terminal-status test pass without ever
+   * reaching the server. A test that cannot fail is worse than no test.
+   */
+  async forceStatus(target: OrderStatus): Promise<boolean> {
+    if (await this.statusTerminal.isVisible()) return false;
+    if ((await this.statusSelect.count()) === 0) return false;
+
+    await this.statusSelect.evaluate((element, status) => {
+      const select = element as HTMLSelectElement;
+      if (!Array.from(select.options).some((option) => option.value === status)) {
+        const option = document.createElement('option');
+        option.value = status;
+        option.textContent = status;
+        select.append(option);
+      }
+      select.value = status;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }, target);
+
+    await this.statusSubmit.click();
+    await this.page
+      .locator(
+        '[data-testid="status-success"], [data-testid="status-error"], [data-testid="status-terminal"]',
+      )
+      .first()
+      .waitFor({ state: 'visible' });
+
+    return true;
+  }
+
+  /**
+   * Points the rendered status form at a different order and submits an arbitrary
+   * status.
+   *
+   * Used for the terminal statuses, which render no form of their own. The form here
+   * belongs to a non-terminal order, so it is bound to the real server action; only
+   * the hidden order id and the selected status are changed. The action therefore
+   * receives a genuine request naming a terminal order, which is exactly the case the
+   * state machine has to refuse.
+   */
+  async retargetStatusForm(orderId: string, target: OrderStatus): Promise<void> {
+    await this.page
+      .locator('[data-testid="status-form"] input[name="orderId"]')
+      .evaluate((element, id) => {
+        (element as HTMLInputElement).value = id;
+      }, orderId);
+
+    await this.statusSelect.evaluate((element, status) => {
+      const select = element as HTMLSelectElement;
+      if (!Array.from(select.options).some((option) => option.value === status)) {
+        const option = document.createElement('option');
+        option.value = status;
+        option.textContent = status;
+        select.append(option);
+      }
+      select.value = status;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }, target);
+
+    await this.statusSubmit.click();
+    await this.page
+      .locator(
+        '[data-testid="status-success"], [data-testid="status-error"], [data-testid="status-terminal"]',
+      )
       .first()
       .waitFor({ state: 'visible' });
   }
