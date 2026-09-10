@@ -78,13 +78,6 @@ export async function updateQuantityAction(formData: FormData): Promise<ActionRe
   const variant = await db.variant.findUnique({ where: { id: parsed.data.variantId } });
   if (!variant) return { ok: false, message: 'That item is no longer available.' };
 
-  if (parsed.data.quantity > variant.stockQty) {
-    return {
-      ok: false,
-      message: `Only ${variant.stockQty} of that item ${variant.stockQty === 1 ? 'is' : 'are'} in stock.`,
-    };
-  }
-
   await db.cartItem.update({
     where: { id: line.id },
     data: { quantity: parsed.data.quantity },
