@@ -96,12 +96,27 @@ export class CartPage extends BasePage {
 
   /**
    * Changes a line quantity the way a shopper does — type, then leave the field. The
-   * commit happens on blur, so the blur is part of the interaction, not an extra.
+   * commit happens on blur and the server action that follows is asynchronous, so this
+   * waits for the line total to settle on the new figure before returning.
+   *
+   * Without that wait a caller that navigates straight afterwards can outrun the
+   * update and read the old quantity. That is precisely the race that makes a suite
+   * flaky, and the fix belongs here rather than as a sleep at each call site.
    */
   async setQuantity(variantId: string, quantity: number): Promise<void> {
     const input = this.quantityInput(variantId);
+    const before = await this.lineTotal(variantId).innerText();
+
     await input.fill(String(quantity));
     await input.blur();
+
+    // Either the line total moves, or the server rejects the change and says so.
+    await this.page
+      .locator(
+        `[data-testid="cart-line-total-${variantId}"]:not(:text("${before}")), [data-testid="cart-error-${variantId}"]`,
+      )
+      .first()
+      .waitFor({ state: 'visible' });
   }
 
   async removeLine(variantId: string): Promise<void> {

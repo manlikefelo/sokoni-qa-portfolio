@@ -93,3 +93,34 @@ the buckets between specs through `/api/test-support/reset-rate-limit`, gated on
 The first version of that route also checked `NODE_ENV !== 'production'` and therefore
 404'd during the run, because the suite deliberately tests against a production build.
 The environment variable is the honest control; NODE_ENV was the wrong gate.
+
+## Promo specs — first run
+
+8 of 16 failed.
+
+| Failure                     | Verdict      | Evidence                                                                                                                                                     |
+| --------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SK-PROMO-001, 002 (×3), 008 | defect       | Discount comes out `-KSh 335.00` where `-KSh 300.00` is correct — the same subtotal-plus-shipping error the pricing specs found.                             |
+| SK-PROMO-005                | defect       | `ENDSTODAY`, which expires at 23:59:59 UTC today, is rejected outright.                                                                                      |
+| SK-PROMO-030                | defect       | A code created by the test to expire sixty seconds from now is also rejected, confirming the comparison truncates to a date rather than using the timestamp. |
+| SK-PROMO-011                | **bad test** | See below.                                                                                                                                                   |
+
+### SK-PROMO-011 — a race of my own making
+
+The test applied a code, reduced the cart quantity so the order fell below the code's
+minimum spend, then navigated and asserted the code had been dropped. It failed, and
+the page snapshot showed the quantity still at 2 — the reduction had not happened yet.
+
+The quantity commit fires on blur and the server action behind it is asynchronous.
+`setQuantity` returned as soon as the field lost focus, so the following navigation
+outran the update and loaded a cart that had not changed.
+
+This is the exact failure mode the suite's reliability rules exist to prevent, and it
+would have been intermittent rather than consistent — the worst kind. The fix is in the
+page object, not the test: `setQuantity` now waits for the line total to move, or for a
+rejection message to appear, before returning. No call site needed changing and no
+sleep was added anywhere.
+
+Worth noting the shape of it. The assertion was right, the application was right, and
+the test was still wrong. A retry would have "fixed" this and hidden a real race in the
+suite — which is the argument for `retries: 0`.
