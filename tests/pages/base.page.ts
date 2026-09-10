@@ -62,4 +62,19 @@ export abstract class BasePage {
   async logout(): Promise<void> {
     await this.logoutButton.click();
   }
+
+  /** Reloads the current page. Exposed so specs need no access to `page` itself. */
+  async reload(): Promise<void> {
+    await this.page.reload();
+  }
+
+  /** Waits for navigation to settle on a URL matching the pattern. */
+  async waitForUrl(pattern: RegExp): Promise<void> {
+    await this.page.waitForURL(pattern);
+  }
+
+  /** The current URL, for assertions about query-string state. */
+  url(): string {
+    return this.page.url();
+  }
 }
