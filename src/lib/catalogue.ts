@@ -42,7 +42,7 @@ function buildWhere(query: CatalogueQuery): Prisma.ProductWhereInput {
     conditions.push({ variants: { some: { priceCents: { gte: query.minPrice } } } });
   }
   if (query.maxPrice !== undefined) {
-    conditions.push({ variants: { some: { priceCents: { lte: query.maxPrice } } } });
+    conditions.push({ variants: { some: { priceCents: { lt: query.maxPrice } } } });
   }
 
   if (query.inStock === 'true') {
