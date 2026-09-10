@@ -69,15 +69,9 @@ const placeOrderSchema = z.object({
 });
 
 /**
- * Step three. The sequence matters and is asserted by the suite:
- *
- *   1. re-price the cart from the database, ignoring anything the client sent
- *   2. re-check stock for every line
- *   3. charge the gateway
- *   4. only on approval, open a transaction that decrements stock and writes the
- *      order
- *
- * A declined or errored payment must leave stock exactly as it was.
+ * Step three. Re-prices the cart from the database, reserves the stock, charges the
+ * gateway, and on approval writes the order inside a transaction. Nothing the client
+ * submitted about price, discount, shipping or total is read.
  */
 export async function placeOrderAction(formData: FormData): Promise<CheckoutResult> {
   const parsed = placeOrderSchema.safeParse(Object.fromEntries(formData.entries()));
@@ -147,6 +141,22 @@ export async function placeOrderAction(formData: FormData): Promise<CheckoutResu
   const promo = await resolveActivePromo(subtotalCents);
   const breakdown = priceCart(lines, promo);
 
+  // Reserve the stock up front so two shoppers cannot both claim the last unit
+  // while the gateway is working. The decrement is conditional, so it affects zero
+  // rows if somebody else got there first.
+  for (const item of cart.items) {
+    const reserved = await db.variant.updateMany({
+      where: { id: item.variantId, stockQty: { gte: item.quantity } },
+      data: { stockQty: { decrement: item.quantity } },
+    });
+    if (reserved.count === 0) {
+      return {
+        ok: false,
+        message: `${item.variant.product.name} sold out while you were checking out.`,
+      };
+    }
+  }
+
   const payment = await chargeGateway({
     cardNumber: parsed.data.cardNumber,
     expiry: parsed.data.expiry,
@@ -159,76 +169,48 @@ export async function placeOrderAction(formData: FormData): Promise<CheckoutResu
     return { ok: false, message: payment.message };
   }
 
-  let orderNumber: string;
-  try {
-    orderNumber = await db.$transaction(async (tx) => {
-      // Decrement conditionally so a concurrent checkout of the last unit cannot
-      // drive stock negative: updateMany with a stock guard affects zero rows if
-      // someone else got there first.
-      for (const item of cart.items) {
-        const updated = await tx.variant.updateMany({
-          where: { id: item.variantId, stockQty: { gte: item.quantity } },
-          data: { stockQty: { decrement: item.quantity } },
-        });
-        if (updated.count === 0) {
-          throw new Error(`OUT_OF_STOCK:${item.variant.product.name}`);
-        }
-      }
-
-      const year = new Date().getFullYear();
-      const priorThisYear = await tx.order.count({
-        where: { createdAt: { gte: new Date(Date.UTC(year, 0, 1)) } },
-      });
-
-      const order = await tx.order.create({
-        data: {
-          orderNumber: formatOrderNumber(year, priorThisYear + 1),
-          userId: user?.id ?? null,
-          guestEmail: user ? null : (state.email ?? null),
-          status: 'PAID',
-          subtotalCents: breakdown.subtotalCents,
-          discountCents: breakdown.discountCents,
-          shippingCents: breakdown.shippingCents,
-          totalCents: breakdown.totalCents,
-          promoCode: promo?.code ?? null,
-          shippingAddress: JSON.stringify(shippingAddress),
-          idempotencyKey,
-          items: {
-            create: cart.items.map((item) => ({
-              variantId: item.variantId,
-              productName: item.variant.product.name,
-              variantName: item.variant.name,
-              unitPriceCents: item.variant.priceCents,
-              quantity: item.quantity,
-              lineTotalCents: item.variant.priceCents * item.quantity,
-            })),
-          },
-        },
-      });
-
-      if (promo) {
-        await tx.promoCode.update({
-          where: { code: promo.code },
-          data: { usedCount: { increment: 1 } },
-        });
-      }
-
-      await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
-      return order.orderNumber;
+  const orderNumber = await db.$transaction(async (tx) => {
+    const year = new Date().getFullYear();
+    const priorThisYear = await tx.order.count({
+      where: { createdAt: { gte: new Date(Date.UTC(year, 0, 1)) } },
     });
-  } catch (error) {
-    // Someone else took the last unit between the stock check and the decrement.
-    // The transaction rolled back, so no stock moved and no order exists; the
-    // shopper is told to retry rather than being shown a half-finished order.
-    const message = error instanceof Error ? error.message : '';
-    if (message.startsWith('OUT_OF_STOCK:')) {
-      return {
-        ok: false,
-        message: `${message.slice('OUT_OF_STOCK:'.length)} sold out while you were paying. Your card was not charged for this order — contact support if a charge appears.`,
-      };
+
+    const order = await tx.order.create({
+      data: {
+        orderNumber: formatOrderNumber(year, priorThisYear + 1),
+        userId: user?.id ?? null,
+        guestEmail: user ? null : (state.email ?? null),
+        status: 'PAID',
+        subtotalCents: breakdown.subtotalCents,
+        discountCents: breakdown.discountCents,
+        shippingCents: breakdown.shippingCents,
+        totalCents: breakdown.totalCents,
+        promoCode: promo?.code ?? null,
+        shippingAddress: JSON.stringify(shippingAddress),
+        idempotencyKey,
+        items: {
+          create: cart.items.map((item) => ({
+            variantId: item.variantId,
+            productName: item.variant.product.name,
+            variantName: item.variant.name,
+            unitPriceCents: item.variant.priceCents,
+            quantity: item.quantity,
+            lineTotalCents: item.variant.priceCents * item.quantity,
+          })),
+        },
+      },
+    });
+
+    if (promo) {
+      await tx.promoCode.update({
+        where: { code: promo.code },
+        data: { usedCount: { increment: 1 } },
+      });
     }
-    throw error;
-  }
+
+    await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+    return order.orderNumber;
+  });
 
   await setAppliedPromoCode(null);
   await clearCheckoutState();
