@@ -34,16 +34,34 @@ export function computeSubtotal(lines: readonly PricedLine[]): number {
   return lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
 }
 
-/**
- * A percentage discount is computed once against the whole subtotal and rounded
- * once. Rounding each line separately and summing produces drift of a shilling
- * or two on some quantity/price combinations.
- */
 export function computeDiscount(subtotalCents: number, promo: AppliedPromo): number {
   if (subtotalCents < promo.minSpendCents) return 0;
   const raw =
     promo.type === 'PERCENTAGE' ? roundHalfUp((subtotalCents * promo.value) / 100) : promo.value;
   return Math.min(Math.max(raw, 0), subtotalCents);
+}
+
+/**
+ * Spreads a percentage discount across the cart so each line carries its own
+ * share, then sums the shares to reach the order discount.
+ */
+function computeLineDiscounts(
+  lines: readonly PricedLine[],
+  subtotalCents: number,
+  promo: AppliedPromo,
+): number {
+  if (subtotalCents < promo.minSpendCents) return 0;
+
+  if (promo.type === 'FIXED') {
+    return Math.min(Math.max(promo.value, 0), subtotalCents);
+  }
+
+  const total = lines.reduce((sum, line) => {
+    const lineTotal = line.unitPriceCents * line.quantity;
+    return sum + roundHalfUp((lineTotal * promo.value) / 100);
+  }, 0);
+
+  return Math.min(Math.max(total, 0), subtotalCents);
 }
 
 /** Shipping is assessed on the post-discount subtotal, not the gross subtotal. */
@@ -60,7 +78,14 @@ export function priceCart(
     return { subtotalCents: 0, discountCents: 0, shippingCents: 0, totalCents: 0 };
   }
   const baseShippingCents = computeShipping(subtotalCents);
-  const discountCents = promo ? computeDiscount(subtotalCents + baseShippingCents, promo) : 0;
+  const discountableLines: PricedLine[] =
+    baseShippingCents > 0
+      ? [...lines, { unitPriceCents: baseShippingCents, quantity: 1 }]
+      : [...lines];
+
+  const discountCents = promo
+    ? computeLineDiscounts(discountableLines, subtotalCents + baseShippingCents, promo)
+    : 0;
   const shippingCents = computeShipping(subtotalCents - discountCents);
   return {
     subtotalCents,
