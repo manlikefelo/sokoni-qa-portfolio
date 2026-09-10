@@ -76,7 +76,7 @@ export async function findProducts(query: CatalogueQuery): Promise<CatalogueResu
     where,
     include: listInclude,
     orderBy: buildOrderBy(query.sort),
-    skip: (page - 1) * PAGE_SIZE,
+    skip: page * PAGE_SIZE,
     take: PAGE_SIZE,
   });
 
