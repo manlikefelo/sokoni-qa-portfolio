@@ -124,3 +124,44 @@ sleep was added anywhere.
 Worth noting the shape of it. The assertion was right, the application was right, and
 the test was still wrong. A retry would have "fixed" this and hidden a real race in the
 suite — which is the argument for `retries: 0`.
+
+## Checkout specs — first run
+
+10 of 16 failed.
+
+| Failure                     | Verdict      | Evidence                                                                                                                                             |
+| --------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SK-CHK-010 to 014, 016, 017 | defect       | Stock recorded at 6, declined payment attempted, stock read back as 4. A declined payment consumes inventory. The most serious finding in the suite. |
+| SK-CHK-001, 005             | **bad test** | Email never filled — see below.                                                                                                                      |
+| SK-CHK-003                  | **bad test** | Tested through a guard that fires first — see below.                                                                                                 |
+
+### SK-CHK-001 and 005 — a conditional on a non-waiting check
+
+`fillAddress` filled the guest email field only `if (await emailInput.isVisible())`.
+`isVisible()` resolves immediately rather than waiting, so while the client component
+was still hydrating it returned false, the email fill was skipped silently, and the
+form then failed server-side validation for a missing email. The symptom — "review step
+never appeared" — pointed nowhere near the cause.
+
+Two fixes in the page object. `fillAddress` now waits for a field common to every
+variant of the form before branching, and uses `count()` rather than `isVisible()` to
+decide whether an optional field exists at all. `submitAddress` now waits for the
+review step or a validation message instead of returning on the click.
+
+The general lesson: `isVisible()` inside an `if` is a race wearing a disguise. It reads
+like a wait and is not one.
+
+### SK-CHK-003 — the native-validation trap, again
+
+The test supplied `not-an-email@` to a `type="email"` input. The browser refused to
+submit, so the server-side Zod validation never ran and no field error appeared —
+exactly the shape of the SK-CART-021 problem, in a different place.
+
+Rewritten to use a phone number that is syntactically fine to the browser (`type="tel"`
+has no format constraint) but is not a Kenyan number, so only the server can reject it.
+The email is now left valid on purpose. That makes the test genuinely about server-side
+validation, which is what it claimed to be about.
+
+Having hit this twice, it is worth stating as a rule: if a browser-level constraint can
+reject the input first, a UI test cannot prove the server also rejects it. Pick input
+the browser accepts, or move the test to the API layer.

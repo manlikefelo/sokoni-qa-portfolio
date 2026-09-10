@@ -167,13 +167,35 @@ export class CheckoutPage extends BasePage {
     await this.cardNumberInput.waitFor({ state: 'visible' });
   }
 
+  /**
+   * Fills the address form.
+   *
+   * The email field only exists for guests and the "use a different address" radio
+   * only for signed-in users with a saved address, so both are conditional. The
+   * conditions wait for the form to be interactive first: `isVisible()` is an instant
+   * check, and an earlier version of this method used it directly, which meant that
+   * while the client component was still hydrating the email fill was silently
+   * skipped and the form failed server-side validation with no obvious cause.
+   */
   async fillAddress(address: AddressInput): Promise<void> {
+    // line1 is present in every variant of this form, so waiting for it is the
+    // signal that the form is ready to be typed into.
+    await this.addressField('line1').waitFor({ state: 'visible' });
+
     if (await this.useNewAddressRadio.isVisible()) {
       await this.useNewAddressRadio.click();
+      // Choosing a different address swaps in the manual fields.
+      await this.addressField('line1').waitFor({ state: 'visible' });
     }
-    if (address.email && (await this.emailInput.isVisible())) {
-      await this.emailInput.fill(address.email);
+
+    if (address.email) {
+      const emailCount = await this.emailInput.count();
+      if (emailCount > 0) {
+        await this.emailInput.waitFor({ state: 'visible' });
+        await this.emailInput.fill(address.email);
+      }
     }
+
     await this.addressField('line1').fill(address.line1);
     if (address.line2) await this.addressField('line2').fill(address.line2);
     await this.addressField('city').fill(address.city);
@@ -182,8 +204,19 @@ export class CheckoutPage extends BasePage {
     await this.addressField('phone').fill(address.phone);
   }
 
+  /**
+   * Submits the address step and waits for the outcome — either the review step, or a
+   * validation message on the form. Returning on the click alone would let a caller
+   * assert against a page that has not changed yet.
+   */
   async submitAddress(): Promise<void> {
     await this.addressContinueButton.click();
+    await this.page
+      .locator(
+        '[data-testid="review-items"], [data-testid^="field-error-"], [data-testid="error-banner"]',
+      )
+      .first()
+      .waitFor({ state: 'visible' });
   }
 
   async continueToPayment(): Promise<void> {
