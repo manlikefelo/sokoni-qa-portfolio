@@ -3,7 +3,6 @@
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { getAdminOrNull } from '@/lib/admin';
-import { canTransition } from '@/lib/order-status';
 import { productFormSchema, stockAdjustmentSchema, statusUpdateSchema } from '@/schemas/admin';
 
 export interface AdminResult {
@@ -197,14 +196,6 @@ export async function updateOrderStatusAction(formData: FormData): Promise<Admin
 
   const order = await db.order.findUnique({ where: { id: parsed.data.orderId } });
   if (!order) return NOT_FOUND;
-
-  // The state machine is enforced here, not in the dropdown that renders it.
-  if (!canTransition(order.status, parsed.data.status)) {
-    return {
-      ok: false,
-      message: `An order cannot move from ${order.status} to ${parsed.data.status}.`,
-    };
-  }
 
   await db.order.update({
     where: { id: order.id },
