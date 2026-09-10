@@ -59,7 +59,8 @@ export function priceCart(
   if (subtotalCents === 0) {
     return { subtotalCents: 0, discountCents: 0, shippingCents: 0, totalCents: 0 };
   }
-  const discountCents = promo ? computeDiscount(subtotalCents, promo) : 0;
+  const baseShippingCents = computeShipping(subtotalCents);
+  const discountCents = promo ? computeDiscount(subtotalCents + baseShippingCents, promo) : 0;
   const shippingCents = computeShipping(subtotalCents - discountCents);
   return {
     subtotalCents,
