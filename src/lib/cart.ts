@@ -97,9 +97,7 @@ export function cartItemCount(cart: CartWithItems | null): number {
 }
 
 /**
- * Folds a guest cart into the signed-in user's cart. Quantities for a variant
- * present in both are summed and then capped at what is actually in stock.
- * Neither side of the merge is discarded.
+ * Moves a guest cart onto the signed-in user so the items survive the login.
  */
 export async function mergeGuestCartIntoUserCart(userId: string, guestToken: string) {
   const guestCart = await db.cart.findUnique({
@@ -112,27 +110,16 @@ export async function mergeGuestCartIntoUserCart(userId: string, guestToken: str
   }
 
   await db.$transaction(async (tx) => {
-    const userCart =
-      (await tx.cart.findUnique({ where: { userId } })) ??
-      (await tx.cart.create({ data: { userId } }));
-
-    for (const guestItem of guestCart.items) {
-      const existing = await tx.cartItem.findUnique({
-        where: { cartId_variantId: { cartId: userCart.id, variantId: guestItem.variantId } },
-      });
-
-      const combined = (existing?.quantity ?? 0) + guestItem.quantity;
-      const capped = Math.min(combined, guestItem.variant.stockQty);
-      if (capped <= 0) continue;
-
-      await tx.cartItem.upsert({
-        where: { cartId_variantId: { cartId: userCart.id, variantId: guestItem.variantId } },
-        create: { cartId: userCart.id, variantId: guestItem.variantId, quantity: capped },
-        update: { quantity: capped },
-      });
+    const userCart = await tx.cart.findUnique({ where: { userId } });
+    if (userCart) {
+      await tx.cartItem.deleteMany({ where: { cartId: userCart.id } });
+      await tx.cart.delete({ where: { id: userCart.id } });
     }
 
-    await tx.cart.delete({ where: { id: guestCart.id } });
+    await tx.cart.update({
+      where: { id: guestCart.id },
+      data: { userId, guestToken: null },
+    });
   });
 }
 
