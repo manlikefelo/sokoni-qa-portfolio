@@ -10,6 +10,10 @@ env:
   DATABASE_URL: file:./dev.db
   AUTH_SECRET: ci-secret-value-that-is-long-enough-for-zod-validation
   AUTH_URL: http://localhost:3000
+  # Enables /api/test-support/reset-rate-limit for the run. Without it that route
+  # answers 404 and every spec that clears a rate-limit bucket fails. Not a secret:
+  # it gates a route that only clears in-memory counters, and no deployment sets it.
+  TEST_SUPPORT_TOKEN: ci-test-support-token-value
 
 jobs:
   lint-and-typecheck:
@@ -50,8 +54,11 @@ jobs:
       - run: npm run seed
       - run: npx playwright install --with-deps
       - run: npm run build
+      # Excludes tests/visual, whose baselines are platform-specific and are
+      # regenerated in the a11y-and-visual job. Running them here would compare Linux
+      # screenshots against the committed Windows set and fail every time.
       - name: Run Playwright
-        run: npx playwright test --project="${{ matrix.project }}"
+        run: npx playwright test tests/e2e tests/api tests/smoke.spec.ts --project="${{ matrix.project }}"
 
       # Run after the parallel suite, because it exhausts the process-wide rate
       # limiter and cannot share the application with anything else.

@@ -20,3 +20,6 @@ next-env.d.ts
 *.tmp.ts
 *.tmp.mjs
 .reliability/
+
+# Working document for the finishing session, not a deliverable
+SESSION_STATE.md
