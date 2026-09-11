@@ -373,3 +373,43 @@ explaining it was right about the risk, and it still collided the moment another
 picked a literal from the same range. Test data has to be unique by construction, and
 "unique enough" fails at a rate low enough to look like something else entirely — in
 this case, like a browser bug in a browser that was behaving correctly.
+
+## A read that could observe the list in two states
+
+`SK-CAT-048` failed in CI on a timeout rather than an assertion:
+
+```
+TimeoutError: locator.getAttribute: Timeout 10000ms exceeded.
+  - waiting for locator('[data-testid^="product-card-"]').nth(1)
+    at pages/catalogue.page.ts:181
+```
+
+The page object read the grid in two steps — a `count()`, then a `getAttribute()` per
+index:
+
+```ts
+const count = await cards.count();
+for (let index = 0; index < count; index += 1) {
+  const testId = await cards.nth(index).getAttribute('data-testid');
+```
+
+Every one of those is a separate round trip to the browser. `SK-CAT-048` clicks through
+to the next page, so the grid re-renders in the middle of the loop: the count was taken
+from the old set of cards, and the indexed read then addressed an element that had
+already been replaced. Playwright waited the full timeout for a node that was never
+coming back.
+
+Two things about this are worth stating plainly. It is a **bad test, not a defect** —
+the application paginated correctly throughout. And it was _masking_ a real one: while
+the helper was timing out, `SK-CAT-048` was counted among the 62 expected failures, so
+the assertion it exists to make — that paging forward changes the products shown — was
+never actually evaluated. A test failing for the wrong reason is indistinguishable from
+a test failing for the right one when all you read is the count.
+
+`visibleSlugs` and `visiblePricesInCents` now read the whole list in a single
+evaluation, so there is no window in which the grid can change underneath them.
+`visibleNames` already did this with `allInnerTexts()`, which is why it never failed.
+
+Verified with `--repeat-each=2`: `SK-CAT-048` passes on both runs, and every remaining
+failure in the pagination and sort specs is an assertion rather than a timeout — BUG-03
+and SK-BUG-011, caught on their merits.

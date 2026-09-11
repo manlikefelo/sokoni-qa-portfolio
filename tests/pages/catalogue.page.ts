@@ -172,29 +172,36 @@ export class CataloguePage extends BasePage {
     await this.waitForResults();
   }
 
-  /** The slugs currently rendered, in display order. */
+  /**
+   * The slugs currently rendered, in display order.
+   *
+   * Read in one evaluation rather than a count followed by a getAttribute per index.
+   * The paged grid re-renders on navigation, and the old loop held a stale nth()
+   * handle across that boundary: it read a count, the grid replaced its cards, and
+   * the next nth(index) resolved to an element that no longer existed and timed out.
+   * A single pass cannot observe the list in two different states.
+   */
   async visibleSlugs(): Promise<string[]> {
-    const cards = this.page.locator('[data-testid^="product-card-"]');
-    const count = await cards.count();
-    const slugs: string[] = [];
-    for (let index = 0; index < count; index += 1) {
-      const testId = await cards.nth(index).getAttribute('data-testid');
-      if (testId) slugs.push(testId.replace('product-card-', ''));
-    }
-    return slugs;
+    return this.page.$$eval('[data-testid^="product-card-"]', (cards) =>
+      cards
+        .map((card) => card.getAttribute('data-testid') ?? '')
+        .filter(Boolean)
+        .map((testId) => testId.replace('product-card-', '')),
+    );
   }
 
-  /** The displayed prices in cents, in display order, for sort assertions. */
+  /**
+   * The displayed prices in cents, in display order, for sort assertions.
+   *
+   * Read in one evaluation, for the same reason as visibleSlugs above: a re-render
+   * between the count and an indexed read leaves the loop addressing an element that
+   * has already been replaced.
+   */
   async visiblePricesInCents(): Promise<number[]> {
-    const prices = this.page.locator('[data-testid^="product-price-"]');
-    const count = await prices.count();
-    const values: number[] = [];
-    for (let index = 0; index < count; index += 1) {
-      const text = await prices.nth(index).innerText();
-      const digits = text.replace(/[^0-9.]/g, '');
-      values.push(Math.round(Number(digits) * 100));
-    }
-    return values;
+    const texts = await this.page.$$eval('[data-testid^="product-price-"]', (nodes) =>
+      nodes.map((node) => node.textContent ?? ''),
+    );
+    return texts.map((text) => Math.round(Number(text.replace(/[^0-9.]/g, '')) * 100));
   }
 
   async visibleNames(): Promise<string[]> {
