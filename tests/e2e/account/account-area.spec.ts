@@ -1,6 +1,6 @@
 import { test, expect } from '../../fixtures/base';
 import { USERS } from '../../fixtures/users';
-import { testDb, createOrderFor } from '../../fixtures/db';
+import { testDb, createOrderFor, uniqueOrderNumber } from '../../fixtures/db';
 import { LoginPage, RegisterPage } from '../../pages/login.page';
 import { AccountPage } from '../../pages/account.page';
 import { resetRateLimits } from '../../fixtures/rate-limit';
@@ -14,8 +14,12 @@ import { resetRateLimits } from '../../fixtures/rate-limit';
 test.use({ storageState: USERS.customer.storageState });
 
 test.describe('SK-ACC — order history and ownership', () => {
-  const MINE = 'SK-2026-910001';
-  const THEIRS = 'SK-2026-910002';
+  // Minted per worker rather than hardcoded. The previous literals sat inside the
+  // range order-status.spec.ts draws from at random, so a parallel worker could take
+  // one, fail this file's beforeAll on the unique orderNumber column, and leave every
+  // spec here hunting a row that was never created. See docs/TRIAGE_NOTES.md.
+  const MINE = uniqueOrderNumber();
+  const THEIRS = uniqueOrderNumber();
 
   test.beforeAll(async () => {
     await testDb.orderItem.deleteMany({

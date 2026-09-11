@@ -200,6 +200,28 @@ export async function seedUserCart(
   }
 }
 
+/**
+ * Mints an order number that no other test, in any worker, can collide with.
+ *
+ * The unique `orderNumber` column makes collisions fatal rather than merely
+ * confusing: the losing `beforeAll` throws on create, its orders never exist, and
+ * every spec in that file then fails looking for a row that was never written. That
+ * failure reads as a browser or timing problem, which is what made it expensive to
+ * find — see docs/TRIAGE_NOTES.md.
+ *
+ * Specs previously picked their own literals, and some of those literals sat inside
+ * the range other specs drew from at random. Uniqueness is now the fixture's job, and
+ * no spec should hardcode an order number again. The worker id separates concurrent
+ * workers, the timestamp separates runs, and the counter separates calls within one
+ * worker — so the result is unique without relying on a random draw not repeating.
+ */
+let orderSequence = 0;
+export function uniqueOrderNumber(): string {
+  const worker = process.env.TEST_WORKER_INDEX ?? '0';
+  orderSequence += 1;
+  return `SK-T-${worker}-${Date.now().toString(36)}-${orderSequence}`;
+}
+
 export async function createOrderFor(options: {
   email: string;
   idempotencyKey: string;

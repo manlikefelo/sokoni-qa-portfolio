@@ -1,6 +1,6 @@
 import { test, expect } from '../../fixtures/base';
 import { USERS } from '../../fixtures/users';
-import { testDb, createOrderFor } from '../../fixtures/db';
+import { testDb, createOrderFor, uniqueOrderNumber } from '../../fixtures/db';
 import type { OrderStatus } from '../../pages/admin.page';
 
 /**
@@ -40,12 +40,13 @@ test.use({ storageState: USERS.admin.storageState });
 /**
  * Creates an order parked at a given status, for one test to move.
  *
- * The order number is derived from a random suffix rather than a shared counter, so
- * tests running in parallel cannot collide on the unique orderNumber column.
+ * The order number comes from the shared fixture helper, which guarantees uniqueness
+ * across workers. This used to draw a random six-digit suffix, which was only
+ * probably unique — and it shared its range with literals hardcoded in other specs,
+ * so it eventually collided. See docs/TRIAGE_NOTES.md.
  */
 async function orderAt(status: OrderStatus, prefix: string) {
-  const suffix = Math.floor(Math.random() * 900_000) + 100_000;
-  const orderNumber = `SK-2026-${suffix}`;
+  const orderNumber = uniqueOrderNumber();
 
   await testDb.orderItem.deleteMany({ where: { order: { orderNumber } } });
   await testDb.order.deleteMany({ where: { orderNumber } });

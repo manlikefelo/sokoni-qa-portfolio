@@ -7,6 +7,7 @@ import {
   cleanupScopedOrders,
   createScopedProduct,
   cleanupScopedData,
+  uniqueOrderNumber,
 } from '../fixtures/db';
 
 /**
@@ -110,7 +111,7 @@ test.describe('SK-API — route-level authorisation', () => {
    * 404 — the same answer an order that does not exist would give.
    */
   test('SK-API-026 a user cannot read another user’s order', async ({ browser }) => {
-    const orderNumber = `SK-2026-900001`;
+    const orderNumber = uniqueOrderNumber();
     await cleanupScopedOrders(`${ORDER_KEY_PREFIX}-owned`);
     await testDb.order.deleteMany({ where: { orderNumber } });
 
@@ -137,7 +138,7 @@ test.describe('SK-API — route-level authorisation', () => {
   });
 
   test('SK-API-027 a user can read their own order', async ({ browser }) => {
-    const orderNumber = `SK-2026-900002`;
+    const orderNumber = uniqueOrderNumber();
     await testDb.order.deleteMany({ where: { orderNumber } });
 
     await createOrderFor({

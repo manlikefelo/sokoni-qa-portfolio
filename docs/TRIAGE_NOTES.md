@@ -276,3 +276,100 @@ That is the `forceStatus` problem again in a different guise — a command that 
 run a test and runs none. Both filters are now driven by a `SERIAL_ONLY` environment
 variable so the two modes are mutually exclusive by construction, and the script was run
 to confirm it selects exactly one test rather than zero.
+
+## Cross-browser CI — a collision that looked like a browser problem
+
+The suite ran green locally and red in CI, and it was red in a way that pointed at the
+browsers. WebKit failed 163 specs against Chromium's 122; whole files went down at once
+— all of `admin-products`, most of `cart-operations`, all of `account-area`. The shared
+symptom was a cart that stayed empty after an add, and `sokoni.guest` coming back
+`undefined` from `context.cookies()`. That reads unmistakably like a cookie policy
+difference between engines.
+
+Three things had to be separated before any of it made sense, because two of them were
+environment faults that had nothing to do with the application or the suite.
+
+### Two faults in the CI environment, not in the code
+
+`TEST_SUPPORT_TOKEN` was never set in the workflow. The rate-limit reset route is gated
+behind it, so the route answered 404, `resetRateLimits` threw in `beforeEach`, and
+roughly 77 account and auth specs per job died before asserting anything.
+
+The visual specs were running inside the browser matrix, comparing Linux screenshots
+against the committed Windows baselines. They already had their own job. They cannot
+pass in the matrix and never could.
+
+Neither is a defect in anything the suite is meant to test, and together they accounted
+for most of the noise. With both fixed, Chromium failed **exactly the 62 specs that
+catch the ten seeded defects** — the number the test plan predicts. That is the
+measurement everything else had been hiding.
+
+### The engine theory, and why it was wrong
+
+The remaining suspicion was `secure: isProduction` in `src/lib/cart.ts`. CI builds with
+`NODE_ENV=production`, so the guest cookie is minted `Secure`, and the suite drives the
+app over plain `http://localhost:3000`. Chromium and Firefox treat localhost as a
+trustworthy origin; if WebKit did not, every cookie would be dropped and precisely these
+files would fail.
+
+It was a clean theory and it was wrong. A direct probe — one local HTTP server issuing a
+`Secure` cookie, read back through all three engines — showed Chromium, Firefox **and**
+WebKit all storing it. Running `SK-API-031` alone under WebKit passed as well.
+
+The theory was cheap to test and would have been expensive to assume. Had it gone in as
+a fix, `secure` would have been weakened in the application to satisfy a test
+environment, the real cause would have remained, and a security attribute would have
+been quietly downgraded for no reason.
+
+### The actual cause: two specs sharing a namespace
+
+The failure only appears under parallelism. `SK-API-031` passes alone and fails at
+`--workers=2`, which is the CI setting.
+
+`account-area.spec.ts` hardcoded its fixtures:
+
+```ts
+const MINE = 'SK-2026-910001';
+const THEIRS = 'SK-2026-910002';
+```
+
+`order-status.spec.ts` minted its own at random, with a comment explaining that this was
+specifically to avoid collisions:
+
+```ts
+const suffix = Math.floor(Math.random() * 900_000) + 100_000; // SK-2026-100000..999999
+```
+
+`910001` and `910002` are inside that range. When a worker drew either, the create in
+`account-area`'s `beforeAll` hit `Unique constraint failed on the fields: (orderNumber)`,
+the orders were never written, and every spec in the file then waited out its timeout
+looking for a row that did not exist. The cart failures were the same story through the
+guest cookie: the token is minted _by_ the add-to-cart action, so a failed setup meant no
+token, and the absent cookie was a symptom being read as the cause.
+
+Two details made this expensive. The collision is probabilistic — about two draws in
+900,000 — so it surfaced as a different handful of specs on each job and looked like
+flakiness. And the loudest symptom was three layers downstream of the fault.
+
+### The fix
+
+Uniqueness is now the fixture's job rather than each spec's. `uniqueOrderNumber()` in
+`tests/fixtures/db.ts` composes the worker index, a timestamp and a per-worker counter,
+so it is unique by construction rather than probably unique. All four call sites use it,
+and no spec hardcodes an order number.
+
+The one literal left is `SK-2026-000000` in `SK-ACC-044`, which asserts a 404 for an
+order that does not exist. That one has to be a literal, and the `SK-T-` prefix the
+helper now produces can never collide with it.
+
+Verified at `--workers=2` across the three affected files: no constraint errors, every
+account and authorisation spec green, and the only remaining failures the thirteen
+`SK-ADM` illegal-transition specs — which is BUG-10 being caught, exactly as intended.
+
+### What this is worth
+
+A random suffix is not isolation. It was documented as the safe choice, the comment
+explaining it was right about the risk, and it still collided the moment another spec
+picked a literal from the same range. Test data has to be unique by construction, and
+"unique enough" fails at a rate low enough to look like something else entirely — in
+this case, like a browser bug in a browser that was behaving correctly.
