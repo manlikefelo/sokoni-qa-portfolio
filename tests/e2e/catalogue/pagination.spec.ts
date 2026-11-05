@@ -115,8 +115,8 @@ test.describe('SK-CAT — pagination', () => {
     await cataloguePage.paginationNext.click();
     await cataloguePage.waitForResults();
 
-    const second = await cataloguePage.visibleSlugs();
-    expect(second).not.toEqual(first);
+    // The old grid is still visible when the click returns, so this has to retry.
+    await expect.poll(() => cataloguePage.visibleSlugs()).not.toEqual(first);
     await expect(cataloguePage.paginationPage(2)).toHaveAttribute('aria-current', 'page');
   });
 

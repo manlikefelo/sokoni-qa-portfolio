@@ -24,22 +24,22 @@ meant to be correct, and the suite asserts that they are.
 
 | ID     | Severity | Area      | Summary                                             | Commit    |
 | ------ | -------- | --------- | --------------------------------------------------- | --------- |
-| BUG-01 | High     | pricing   | Percentage discount computed on subtotal + shipping | `6272c09` |
-| BUG-02 | High     | cart      | Quantity update skips the stock check               | `2578ab4` |
-| BUG-03 | Medium   | catalogue | Pagination skips a whole page                       | `0144e8f` |
-| BUG-04 | Medium   | catalogue | Maximum price filter excludes the boundary          | `77bec90` |
-| BUG-05 | High     | cart      | Guest cart replaces the user cart on login          | `bd0b7da` |
-| BUG-06 | Critical | checkout  | Stock decremented before payment is confirmed       | `a691ce7` |
-| BUG-07 | Medium   | promo     | Code expiring today rejected from midnight          | `28e97e5` |
-| BUG-08 | Medium   | pricing   | Percentage discount rounded per line                | `5b54780` |
-| BUG-09 | Medium   | catalogue | Product search is case-sensitive                    | `1909daf` |
-| BUG-10 | Medium   | admin     | Order status transitions unvalidated                | `115f747` |
+| BUG-01 | High     | pricing   | Percentage discount computed on subtotal + shipping | `beab256` |
+| BUG-02 | High     | cart      | Quantity update skips the stock check               | `2766bcc` |
+| BUG-03 | Medium   | catalogue | Pagination skips a whole page                       | `47b34f5` |
+| BUG-04 | Medium   | catalogue | Maximum price filter excludes the boundary          | `1559943` |
+| BUG-05 | High     | cart      | Guest cart replaces the user cart on login          | `4380c4c` |
+| BUG-06 | Critical | checkout  | Stock decremented before payment is confirmed       | `7436161` |
+| BUG-07 | Medium   | promo     | Code expiring today rejected from midnight          | `b0ee2a0` |
+| BUG-08 | Medium   | pricing   | Percentage discount rounded per line                | `f5c518f` |
+| BUG-09 | Medium   | catalogue | Product search is case-sensitive                    | `efc43f5` |
+| BUG-10 | Medium   | admin     | Order status transitions unvalidated                | `1916851` |
 
 ---
 
 ## BUG-01 — Percentage discount applied to the total including shipping
 
-**Severity:** High · **Commit:** `6272c09`
+**Severity:** High · **Commit:** `beab256`
 **File:** `src/lib/pricing.ts` · **Function:** `priceCart`
 
 A percentage discount is computed against `subtotal + shipping` rather than against
@@ -66,7 +66,7 @@ is never discounted. Shipping is then assessed on the post-discount subtotal.
 
 ## BUG-02 — Cart quantity update bypasses the stock check
 
-**Severity:** High · **Commit:** `2578ab4`
+**Severity:** High · **Commit:** `2766bcc`
 **File:** `src/actions/cart.ts` · **Function:** `updateQuantityAction`
 
 `addToCartAction` validates the requested quantity against `stockQty` and refuses to
@@ -89,7 +89,7 @@ rejected with the available figure in the message.
 
 ## BUG-03 — Pagination skips an entire page
 
-**Severity:** Medium · **Commit:** `0144e8f`
+**Severity:** Medium · **Commit:** `47b34f5`
 **File:** `src/lib/catalogue.ts` · **Function:** `findProducts`
 
 `skip` is computed as `page * PAGE_SIZE` instead of `(page - 1) * PAGE_SIZE`, so
@@ -109,7 +109,7 @@ Walking every page yields exactly 25 distinct products with no repeats and no ga
 
 ## BUG-04 — Maximum price filter excludes the boundary value
 
-**Severity:** Medium · **Commit:** `77bec90`
+**Severity:** Medium · **Commit:** `1559943`
 **File:** `src/lib/catalogue.ts` · **Function:** `buildWhere`
 
 The upper bound uses `lt` where the specification requires both bounds to be
@@ -140,7 +140,7 @@ minimum or exactly the maximum appears in the results.
 
 ## BUG-05 — Guest cart replaces the user cart on login
 
-**Severity:** High · **Commit:** `bd0b7da`
+**Severity:** High · **Commit:** `4380c4c`
 **File:** `src/lib/cart.ts` · **Function:** `mergeGuestCartIntoUserCart`
 
 On login the guest cart is reassigned to the user and any cart the user already had is
@@ -164,7 +164,7 @@ quantities summed and then capped at available stock. Neither cart is discarded.
 
 ## BUG-06 — Stock decremented before the payment is confirmed
 
-**Severity:** Critical · **Commit:** `a691ce7`
+**Severity:** Critical · **Commit:** `7436161`
 **File:** `src/actions/checkout.ts` · **Function:** `placeOrderAction`
 
 Stock is decremented as a "reservation" before the gateway is called, and is never
@@ -188,7 +188,7 @@ errored payment leaves every stock level untouched.
 
 ## BUG-07 — A promo code expiring today is rejected from midnight
 
-**Severity:** Medium · **Commit:** `28e97e5`
+**Severity:** Medium · **Commit:** `b0ee2a0`
 **File:** `src/lib/promo.ts` · **Function:** `isExpired`
 
 Both timestamps are truncated to midnight UTC before comparison and then compared
@@ -210,7 +210,7 @@ code expiring at 23:59:59 today is valid until that instant and invalid from it.
 
 ## BUG-08 — Percentage discount rounded per line rather than once
 
-**Severity:** Medium · **Commit:** `5b54780`
+**Severity:** Medium · **Commit:** `f5c518f`
 **File:** `src/lib/pricing.ts` · **Function:** `computeLineDiscounts`
 
 Each line's share of a percentage discount is rounded individually and the rounded
@@ -245,7 +245,7 @@ rounded exactly once, half-up. No per-line rounding.
 
 ## BUG-09 — Product search is case-sensitive
 
-**Severity:** Medium · **Commit:** `1909daf`
+**Severity:** Medium · **Commit:** `efc43f5`
 **File:** `src/lib/catalogue.ts` · **Functions:** `matchesSearch`, `findProducts`
 
 Search was moved from a database `contains` match to an in-memory filter over the
@@ -275,7 +275,7 @@ partial match. `shirt`, `Shirt` and `SHIRT` all return the same results.
 
 ## BUG-10 — Admin order status transitions are not validated
 
-**Severity:** Medium · **Commit:** `115f747`
+**Severity:** Medium · **Commit:** `1916851`
 **File:** `src/actions/admin.ts` · **Function:** `updateOrderStatusAction`
 
 The action validates that the submitted status is a member of the `OrderStatus` enum

@@ -209,7 +209,8 @@ test.describe('SK-CAT — catalogue filters', () => {
     await cataloguePage.clearFiltersButton.click();
     await cataloguePage.waitForResults();
 
-    expect(await cataloguePage.totalMatches()).toBe(25);
+    // The filtered results are still visible when the click returns, so this has to retry.
+    await expect.poll(() => cataloguePage.totalMatches()).toBe(25);
     await expect(cataloguePage.categoryCheckbox('fashion')).not.toBeChecked();
   });
 });

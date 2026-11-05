@@ -9,7 +9,7 @@ Eleven defects are recorded. Ten were seeded deliberately and are documented in
 specification. Two further genuine defects were found and fixed during the build rather
 than being left in; they are recorded at the end for completeness.
 
-**Environment for every report below:** local, production build of commit `bfa8c79`,
+**Environment for every report below:** local, production build of commit `98f6281`,
 Chromium, SQLite with the standard seed, single worker unless stated.
 
 ---
@@ -17,7 +17,7 @@ Chromium, SQLite with the standard seed, single worker unless stated.
 ## SK-BUG-001 — Percentage discount calculated on subtotal plus shipping
 
 **Severity:** High **Priority:** P1 **Component:** pricing
-**Status:** open (seeded — BUG-01, commit `6272c09`)
+**Status:** open (seeded — BUG-01, commit `beab256`)
 
 **Preconditions:** An order below the KSh 5,000 free-shipping threshold, so shipping is
 a non-zero KSh 350. Promo code `SAVE10` available.
@@ -52,7 +52,7 @@ for free delivery would price correctly, which is how this would reach productio
 ## SK-BUG-002 — Cart quantity update does not check available stock
 
 **Severity:** High **Priority:** P1 **Component:** cart
-**Status:** open (seeded — BUG-02, commit `2578ab4`)
+**Status:** open (seeded — BUG-02, commit `2766bcc`)
 
 **Preconditions:** A variant with `stockQty = 2`, one unit already in the cart.
 
@@ -84,7 +84,7 @@ both paths share one implementation and a third path cannot be added without it.
 ## SK-BUG-003 — Pagination skips the first page of results
 
 **Severity:** Medium **Priority:** P1 **Component:** catalogue
-**Status:** open (seeded — BUG-03, commit `0144e8f`)
+**Status:** open (seeded — BUG-03, commit `47b34f5`)
 
 **Preconditions:** The standard seed of 25 active products, 12 per page.
 
@@ -119,7 +119,7 @@ a good illustration of why a failure count overstates the number of problems.
 ## SK-BUG-004 — Maximum price filter excludes the boundary value
 
 **Severity:** Medium **Priority:** P2 **Component:** catalogue
-**Status:** open (seeded — BUG-04, commit `77bec90`)
+**Status:** open (seeded — BUG-04, commit `1559943`)
 
 **Preconditions:** Oraimo 20000mAh Power Bank, one variant at exactly KSh 3,450.00, the
 only variant at that price.
@@ -147,7 +147,7 @@ the one-product difference and SK-CAT-024 confirming the minimum bound is correc
 ## SK-BUG-005 — Guest cart replaces the user cart on sign-in
 
 **Severity:** High **Priority:** P1 **Component:** cart
-**Status:** open (seeded — BUG-05, commit `bd0b7da`)
+**Status:** open (seeded — BUG-05, commit `4380c4c`)
 
 **Preconditions:** Customer `asha@example.com` with a saved cart containing
 `FASH-CREW-L-WHT` × 2 and `HOME-NX18-STL` × 1. A signed-out session with
@@ -181,7 +181,7 @@ existing quantity, cap at `stockQty`, then delete only the guest cart.
 ## SK-BUG-006 — Stock is consumed by declined payments
 
 **Severity:** Critical **Priority:** P0 **Component:** checkout
-**Status:** open (seeded — BUG-06, commit `a691ce7`)
+**Status:** open (seeded — BUG-06, commit `7436161`)
 
 **Preconditions:** A product with `stockQty = 6`.
 
@@ -232,7 +232,7 @@ single order.
 ## SK-BUG-007 — Promo code expiring today is rejected all day
 
 **Severity:** Medium **Priority:** P2 **Component:** promo
-**Status:** open (seeded — BUG-07, commit `28e97e5`)
+**Status:** open (seeded — BUG-07, commit `b0ee2a0`)
 
 **Preconditions:** Seeded code `ENDSTODAY`, 15% off, expiring at 23:59:59 UTC today.
 
@@ -269,7 +269,7 @@ the day such campaigns get the most traffic.
 ## SK-BUG-008 — Percentage discount rounded per line rather than once
 
 **Severity:** Medium **Priority:** P3 **Component:** pricing
-**Status:** open (seeded — BUG-08, commit `5b54780`)
+**Status:** open (seeded — BUG-08, commit `f5c518f`)
 
 **Preconditions:** Five cart lines at KSh 1,111.15 each, subtotal KSh 5,555.75. The
 post-discount subtotal stays above the free-shipping threshold, so shipping is KSh 0.00
@@ -306,7 +306,7 @@ larger error masks this one. The reproduction above is chosen so shipping is zer
 ## SK-BUG-009 — Product search is case-sensitive
 
 **Severity:** Medium **Priority:** P2 **Component:** catalogue
-**Status:** open (seeded — BUG-09, commit `1909daf`)
+**Status:** open (seeded — BUG-09, commit `efc43f5`)
 
 **Steps to reproduce:**
 
@@ -339,7 +339,7 @@ product descriptions. A smoke test using one lucky search term would pass.
 ## SK-BUG-010 — Order status transitions are not validated
 
 **Severity:** Medium **Priority:** P2 **Component:** admin
-**Status:** open (seeded — BUG-10, commit `115f747`)
+**Status:** open (seeded — BUG-10, commit `1916851`)
 
 **Preconditions:** Admin session. An order in any status.
 

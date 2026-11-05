@@ -445,10 +445,10 @@ the first real answer, and five tests failed:
 defect. A failing test isn't evidence until you know why it fails, which is the same lesson
 as `SK-CAT-048`, learned twice.
 
-The browser comparison and a second run turned up four more bad tests: `SK-ACC-054` opened
-`/login` before the sign-out redirect finished, `SK-CAT-023` read the URL straight after a
-click, `SK-CART-003` read the cart badge before it updated, and `SK-ADM-310` looked for a
-desktop link at phone width.
+The browser comparison and later runs turned up six more bad tests: `SK-ACC-054` opened
+`/login` before the sign-out redirect finished, `SK-ADM-310` looked for a desktop link at
+phone width, and four read the page once before it had updated: `SK-CAT-023` the URL,
+`SK-CART-003` the cart badge, `SK-CAT-048` the grid, and `SK-CAT-033` the result count.
 
 CI now enforces both records through `tests/expected-failures.json`, so a green badge means
 the failures are exactly the known ones, not merely that the job ran.

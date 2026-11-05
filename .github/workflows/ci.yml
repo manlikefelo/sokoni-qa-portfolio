@@ -114,7 +114,7 @@ jobs:
           node-version: 22
           cache: npm
       - name: Revert the seeded defects
-        run: git revert --no-commit 6272c09^..115f747
+        run: git revert --no-commit beab256^..1916851
       - run: npm ci
       - run: npx prisma migrate deploy
       - run: npx prisma generate
