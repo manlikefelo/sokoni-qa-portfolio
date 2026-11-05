@@ -167,6 +167,9 @@ test.describe('SK-ACC — profile', () => {
 
       // The old password must stop working and the new one must start.
       await account.logout();
+      // Signing out finishes with a redirect home. Opening /login before then still
+      // carries the session, and the login page sends a signed-in user away.
+      await page.waitForURL('/');
       await login.goto();
       await login.signInExpectingFailure(email, original);
 

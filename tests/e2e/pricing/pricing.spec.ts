@@ -96,7 +96,11 @@ test.describe('SK-PRICE — pricing engine through the cart', () => {
 
         if (testCase.promo) {
           await cartPage.applyPromo(testCase.promo.code);
-          await expect(cartPage.promoApplied).toBeVisible();
+          // A code below its minimum spend is correctly refused, so "applied" is only
+          // expected when the case earns a discount. The totals below hold either way.
+          if (testCase.expected.discount > 0) {
+            await expect(cartPage.promoApplied).toBeVisible();
+          }
         }
 
         // Exact values to the cent, not merely presence. A presence assertion would

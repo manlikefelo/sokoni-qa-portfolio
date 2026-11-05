@@ -395,7 +395,10 @@ test.describe('SK-CART — stock ceiling', () => {
 
     await cartPage.goto();
     const input = cartPage.quantityInput(variant.id);
-    await input.fill('abc');
+    // Typed key by key, because fill() refuses non-numeric text on a number input. A
+    // shopper's keystrokes have no such restriction.
+    await input.clear();
+    await input.pressSequentially('abc');
     await input.blur();
     await cartPage.goto();
 
