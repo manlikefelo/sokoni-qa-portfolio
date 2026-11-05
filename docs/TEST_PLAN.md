@@ -110,9 +110,10 @@ rate-limit buckets; without it that route answers 404.
 - [x] Every failure triaged to genuine defect or bad test, with the reasoning recorded
 - [x] HTML report, traces and screenshots published as CI artifacts
 
-Residual failures at exit are the 62 specs that catch the ten seeded defects. They are
-expected to fail against the current `main` and expected to pass against the
-`v1.0-clean` tag.
+Residual failures at exit are the 60 specs recorded in `tests/expected-failures.json`,
+which catch the ten seeded defects and `SK-BUG-011`. With the seeding commits reverted,
+two specs still fail, each for a documented open defect. CI enforces both records on
+every run.
 
 ## 7. Risks and mitigations
 

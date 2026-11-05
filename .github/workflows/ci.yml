@@ -78,6 +78,10 @@ jobs:
           mkdir -p ci-results
           cp test-results/results.json ci-results/main.json
           find test-results -name 'error-context.md' -print0 | tar -czf ci-results/main-context.tgz --null -T -
+      # main carries ten seeded defects, so this passes only when exactly the recorded
+      # tests fail. See scripts/check-expected-failures.mjs.
+      - name: Check failures match the record
+        run: node scripts/check-expected-failures.mjs ci-results/main.json main
 
       # Run after the parallel suite, because it exhausts the process-wide rate
       # limiter and cannot share the application with anything else.
@@ -125,6 +129,8 @@ jobs:
           mkdir -p ci-results
           cp test-results/results.json ci-results/clean.json
           find test-results -name 'error-context.md' -print0 | tar -czf ci-results/clean-context.tgz --null -T -
+      - name: Check failures match the record
+        run: node scripts/check-expected-failures.mjs ci-results/clean.json clean
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4

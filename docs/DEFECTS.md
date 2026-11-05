@@ -469,3 +469,41 @@ distinguish the brand green from body grey cannot see that the text is a link.
 
 Found by `tests/a11y/accessibility.spec.ts::SK-A11Y-005`. Fixed by giving those links a
 permanent underline.
+
+---
+
+## Defects found by the clean baseline and the browser matrix
+
+These came later, from running the suite with the seeding commits reverted and comparing
+the browsers against each other. Unlike the section above, they postdate `v1.0-clean`.
+
+### SK-BUG-016 — No way to sign out on a phone _(fixed)_
+
+The sign-out button sat in the desktop header, which is hidden below the `md` breakpoint,
+and the mobile menu didn't offer one. A shopper on a phone stayed signed in with no way
+out from the navigation.
+
+Found by `SK-ACC-024` and `SK-ACC-054` failing only on Mobile Chrome. Fixed by adding the
+button to the mobile menu.
+
+### SK-BUG-017 — A good card was refused after one decline _(fixed)_
+
+`PaymentForm` reused one idempotency key for every attempt, and the gateway retains its
+result per key. After a decline, retrying with a valid card replayed the stored "Your card
+was declined" without ever evaluating the new card, until the shopper reloaded the page.
+
+`SK-CHK-017` found it, but BUG-06 made that test fail on `main` for a different reason, so
+the defect stayed hidden until the test also failed with the seeds reverted. Fixed by
+issuing a new key after a refused attempt.
+
+### SK-BUG-018 — A percent sign in search matches every product _(open, clean code only)_
+
+**Severity:** Low **Priority:** P3 **Component:** catalogue
+
+With the seeding commits reverted, searching for `%` returns all 25 products instead of
+the empty state, which `SK-CAT-008` requires. `buildWhere` passes the term to a Prisma
+`contains` filter, which appears to leave the wildcard unescaped on SQLite.
+
+BUG-09 replaces that query with an in-memory match, so `main` doesn't show the defect. It
+stays open because the affected code exists only when BUG-09 is reverted. **Suggested
+fix:** escape `%` and `_` in the term, or match with `instr`.

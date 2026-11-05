@@ -413,3 +413,42 @@ evaluation, so there is no window in which the grid can change underneath them.
 Verified with `--repeat-each=2`: `SK-CAT-048` passes on both runs, and every remaining
 failure in the pagination and sort specs is an assertion rather than a timeout — BUG-03
 and SK-BUG-011, caught on their merits.
+
+## The WebKit theory, revisited
+
+The section above rejected the `Secure` cookie theory, and that was wrong. The namespace
+collision was real, but WebKit still failed 146 specs after it was fixed. The pattern was
+sharp: public pages and the API layer passed, and almost everything that needed a cookie
+failed, including a plain valid sign-in.
+
+The earlier probe had read cookies back from storage on a developer machine. It never
+exercised WebKit on Linux, where CI runs. Serving the same build over real TLS took WebKit
+to 62 failures, with one test separating it from Chromium, and left the cookie attribute
+untouched. The lesson is narrower than "the theory was right": a probe only rules out a
+cause in the environment it ran in.
+
+## What the clean baseline exposed
+
+The README used to promise a green suite at `v1.0-clean`, but that tag predates the tests,
+so nobody had ever seen it. Reverting the seeding commits on top of the current suite gave
+the first real answer, and five tests failed:
+
+| Spec            | Verdict            | Reasoning                                                                    |
+| --------------- | ------------------ | ---------------------------------------------------------------------------- |
+| SK-PRICE-012    | **bad test**       | The shared runner required "promo applied" for a code correctly refused.     |
+| SK-CART-028     | **bad test**       | `fill('abc')` throws on a number input. Keystrokes are what a shopper sends. |
+| SK-CHK-017      | defect (unplanned) | SK-BUG-017, hidden on `main` because BUG-06 fails the same test.             |
+| SK-CAT-008      | defect (unplanned) | SK-BUG-018, in query code that BUG-09 replaces.                              |
+| SK-CAT-060      | defect (unplanned) | SK-BUG-011 again. Which sort test catches it depends on what is on page 1.   |
+
+`SK-PRICE-012` also failed on `main`, where it had been counted as catching a seeded
+defect. A failing test isn't evidence until you know why it fails, which is the same lesson
+as `SK-CAT-048`, learned twice.
+
+The browser comparison and a second run turned up four more bad tests: `SK-ACC-054` opened
+`/login` before the sign-out redirect finished, `SK-CAT-023` read the URL straight after a
+click, `SK-CART-003` read the cart badge before it updated, and `SK-ADM-310` looked for a
+desktop link at phone width.
+
+CI now enforces both records through `tests/expected-failures.json`, so a green badge means
+the failures are exactly the known ones, not merely that the job ran.

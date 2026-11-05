@@ -49,8 +49,9 @@ test.describe('SK-CART — cart operations', () => {
     await productPage.setQuantity(2);
     await productPage.addToCartAndWait();
 
-    // Two lines, five units.
-    expect(await productPage.getCartCount()).toBe(5);
+    // Two lines, five units. A retrying assertion, because the badge updates after the
+    // add-to-cart confirmation appears.
+    await expect(productPage.cartCount).toHaveText('5');
   });
 
   test('SK-CART-004 line total is unit price times quantity', async ({ productPage, cartPage }) => {

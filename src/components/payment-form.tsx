@@ -7,8 +7,8 @@ import { formatMoney } from '@/lib/money';
 import { ErrorBanner } from './error-banner';
 
 /**
- * The idempotency key is generated once per mounted form and reused on retry, so a
- * double-click or a refreshed submission cannot produce two orders for one payment.
+ * The idempotency key is generated per payment attempt, so a double-click or a replayed
+ * submission cannot produce two orders for one payment.
  */
 export function PaymentForm({ totalCents }: { totalCents: number }) {
   const router = useRouter();
@@ -28,6 +28,9 @@ export function PaymentForm({ totalCents }: { totalCents: number }) {
         router.push(`/checkout/confirmation/${result.orderNumber}`);
         return;
       }
+      // A refused attempt is finished, and the gateway keeps its result per key. The next
+      // attempt needs its own key, or a good card gets the stored decline replayed.
+      idempotencyKey.current = crypto.randomUUID();
       setErrors(result.fieldErrors ?? {});
       setFormError(result.message ?? 'That payment could not be completed.');
     });

@@ -18,11 +18,12 @@ repository.
 
 I wrote a specification-complete e-commerce application, seeded ten defects into it, then
 wrote a Playwright suite from the specification without looking at the defect list. The
-suite found all ten. It also found **one defect I had not planted** and, along the way,
-**four genuine bugs in my own application** that I fixed rather than leaving in.
+suite found all ten. It also found **two defects I had not planted**, which stay open and
+documented, and **six genuine bugs in my own application** that I fixed rather than
+leaving in.
 
-More usefully, it found **eight defects in my own tests** — including one case where six
-tests were passing while submitting nothing at all. Those are written up in
+More usefully, it found **fourteen defects in my own tests** — including one case where
+six tests were passing while submitting nothing at all. Those are written up in
 [`docs/TRIAGE_NOTES.md`](./docs/TRIAGE_NOTES.md) with the reasoning, because knowing the
 difference between a broken application and a broken test is most of the job.
 
@@ -31,8 +32,8 @@ difference between a broken application and a broken test is most of the job.
 | Application                  | 24 routes, Next.js 16 App Router, TypeScript `strict`, zero `any` |
 | Suite                        | 274 specs across E2E, API, accessibility and visual layers        |
 | Seeded defects               | 10, all caught by named tests written from the spec               |
-| Unplanned defects found      | 1 in the application, 4 more found and fixed during the build     |
-| Test defects found and fixed | 8, each documented with the root cause                            |
+| Unplanned defects found      | 2 still open, 6 found and fixed during the build                  |
+| Test defects found and fixed | 14, each documented with the root cause                           |
 | Retries                      | 0, locally and in CI                                              |
 
 ---
@@ -102,14 +103,26 @@ npm run test:ui                      # interactive runner
 npx playwright show-report           # the HTML report
 ```
 
-Expect **62 failures on `main`**. Those are the tests that catch the seeded defects.
-To see the suite green, check out the clean baseline:
+Expect **60 failures on `main`**: the tests that catch the seeded defects, plus those that
+catch `SK-BUG-011`. To compare, revert the ten seeding commits in your working tree:
 
 ```bash
-git checkout v1.0-clean && npm run test
+git revert --no-commit 6272c09^..115f747 && npm run test
+git revert --abort                           # put the seeded defects back
 ```
 
-That contrast is the whole demonstration, and it is reproducible in two commands.
+Two tests still fail, each for a documented open defect: `SK-CAT-060` (`SK-BUG-011`) and
+`SK-CAT-008` (`SK-BUG-018`).
+
+### What the CI badge means
+
+A plain pass or fail can't describe a branch that fails on purpose, so CI compares each run
+with [`tests/expected-failures.json`](./tests/expected-failures.json), on all four browsers
+and on the reverted baseline. The badge is green when **exactly** the recorded tests fail.
+A new failure turns it red, and so does a recorded failure that starts passing.
+
+The browser matrix runs over local HTTPS, because a production build mints `Secure`
+cookies and WebKit on Linux doesn't keep them over plain `http://localhost`.
 
 ### Seeded accounts
 
