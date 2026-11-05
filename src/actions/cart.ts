@@ -133,7 +133,7 @@ export async function applyPromoAction(formData: FormData): Promise<ActionResult
   if (!result.ok) return { ok: false, message: result.message };
 
   // The limiter exists to stop someone grinding through candidate codes, so a
-  // successful application clears the bucket — the same treatment a successful login
+  // successful application clears the bucket: the same treatment a successful login
   // gets. Without this an honest shopper who applies a valid code on ten separate
   // orders is locked out of applying an eleventh.
   resetRateLimit(`promo:${ip}`);

@@ -6,7 +6,7 @@ export const PAGE_SIZE = 12;
 /**
  * Catalogue state lives entirely in the query string so a filtered view is
  * shareable and survives a reload. Unparseable values fall back to defaults
- * rather than erroring — a hand-edited URL should not produce a 500.
+ * rather than erroring: a hand-edited URL should not produce a 500.
  */
 export const catalogueQuerySchema = z.object({
   q: z.string().trim().max(100).optional(),

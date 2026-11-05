@@ -5,10 +5,10 @@ import { test, expect } from '../../fixtures/base';
  * match.
  *
  * The case variations are the point of this file. A single lowercase query passing
- * proves very little — it is the upper and mixed-case forms returning the *same*
+ * proves very little: it is the upper and mixed-case forms returning the *same*
  * result set that shows the matching is genuinely case-insensitive.
  */
-test.describe('SK-CAT — catalogue search', () => {
+test.describe('SK-CAT: catalogue search', () => {
   test('SK-CAT-001 an exact product name returns that product', async ({ cataloguePage }) => {
     await cataloguePage.goto({ q: 'Leather Bifold Wallet' });
 

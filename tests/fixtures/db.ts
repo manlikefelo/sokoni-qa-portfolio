@@ -2,7 +2,7 @@ import { PrismaClient, type Prisma } from '@prisma/client';
 
 /**
  * Direct database access for test setup and for asserting on state the UI does not
- * show — stock levels, promo usage counters, order rows.
+ * show: stock levels, promo usage counters, order rows.
  *
  * One client is shared across a worker. Playwright runs workers as separate
  * processes, so each gets its own connection.
@@ -33,7 +33,7 @@ export const EXPECTED_SEED: SeedCounts = {
  * Counts only the seeded catalogue, excluding the fixture category.
  *
  * Other specs create products while this runs, so an unqualified count is a moving
- * target — the first version of this helper counted everything and failed in a full
+ * target: the first version of this helper counted everything and failed in a full
  * parallel run while passing in isolation.
  */
 export async function countSeed(): Promise<SeedCounts> {
@@ -79,8 +79,8 @@ export async function resetPromoUsage(code: string, usedCount = 0): Promise<void
 /**
  * Creates a product owned by one spec file, tagged with a unique prefix.
  *
- * Specs that need to assert on a whole result set — sorting, filter boundaries,
- * pagination arithmetic — read the shared seed, because those assertions are about
+ * Specs that need to assert on a whole result set, sorting, filter boundaries,
+ * pagination arithmetic: read the shared seed, because those assertions are about
  * the 25-product dataset the PRD specifies. Specs that mutate data create their own
  * instead, so they cannot disturb the shared set or each other. The trade-off is
  * discussed in docs/TEST_STRATEGY.md.
@@ -91,7 +91,7 @@ export async function resetPromoUsage(code: string, usedCount = 0): Promise<void
  * Fixture products live in their own category so that catalogue specs, which assert
  * against whole-catalogue counts, can exclude them. Without this a spec creating a
  * product for its own purposes changes the catalogue size underneath a pagination or
- * filter assertion running in a different worker at the same time — an order-dependent
+ * filter assertion running in a different worker at the same time: an order-dependent
  * failure that passes in isolation and fails in a full run. See
  * docs/TRIAGE_NOTES.md.
  */
@@ -207,13 +207,13 @@ export async function seedUserCart(
  * confusing: the losing `beforeAll` throws on create, its orders never exist, and
  * every spec in that file then fails looking for a row that was never written. That
  * failure reads as a browser or timing problem, which is what made it expensive to
- * find — see docs/TRIAGE_NOTES.md.
+ * find: see docs/TRIAGE_NOTES.md.
  *
  * Specs previously picked their own literals, and some of those literals sat inside
  * the range other specs drew from at random. Uniqueness is now the fixture's job, and
  * no spec should hardcode an order number again. The worker id separates concurrent
  * workers, the timestamp separates runs, and the counter separates calls within one
- * worker — so the result is unique without relying on a random draw not repeating.
+ * worker: so the result is unique without relying on a random draw not repeating.
  */
 let orderSequence = 0;
 export function uniqueOrderNumber(): string {

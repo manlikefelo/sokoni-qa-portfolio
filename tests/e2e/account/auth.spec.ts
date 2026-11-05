@@ -10,7 +10,7 @@ import { resetRateLimits } from '../../fixtures/rate-limit';
  * what they are about. Accounts they create are namespaced per worker and removed
  * afterwards.
  */
-test.describe('SK-ACC — registration', () => {
+test.describe('SK-ACC: registration', () => {
   test.beforeEach(async ({ baseURL }) => {
     await resetRateLimits(baseURL ?? 'http://localhost:3000');
   });
@@ -134,7 +134,7 @@ test.describe('SK-ACC — registration', () => {
  * the same answer, so the form cannot be used to discover which addresses have
  * accounts.
  */
-test.describe('SK-ACC — sign in', () => {
+test.describe('SK-ACC: sign in', () => {
   test.beforeEach(async ({ baseURL }) => {
     await resetRateLimits(baseURL ?? 'http://localhost:3000');
   });
@@ -188,7 +188,7 @@ test.describe('SK-ACC — sign in', () => {
      * 734 seconds" against "733 seconds". The assertion failed on a one-second
      * difference between two messages that were both correct.
      *
-     * The limiter is behaving properly — this test simply has to guarantee it is
+     * The limiter is behaving properly: this test simply has to guarantee it is
      * looking at the message it claims to be looking at.
      */
     await resetRateLimits(url);
@@ -252,17 +252,17 @@ test.describe('SK-ACC — sign in', () => {
  *
  * This spec deliberately exhausts a shared, process-wide limiter. Everything in the
  * suite shares one IP, so while it runs, any other spec that signs in or registers is
- * liable to be refused — and clearing the bucket in a neighbour's beforeEach does not
+ * liable to be refused: and clearing the bucket in a neighbour's beforeEach does not
  * help, because this spec refills it immediately afterwards.
  *
  * Marked @serial-global and excluded from the default run for that reason. It is
  * executed as its own step in CI, after the parallel suite has finished, where it has
  * the limiter to itself. Running it inside the parallel suite produced exactly the kind
- * of cross-spec interference the reliability rules forbid — it was found under
+ * of cross-spec interference the reliability rules forbid. It was found under
  * --repeat-each, where the doubled attempt count made the collision certain rather than
  * occasional.
  */
-test.describe('SK-ACC — sign-in rate limiting @serial-global', () => {
+test.describe('SK-ACC: sign-in rate limiting @serial-global', () => {
   test.describe.configure({ mode: 'serial' });
 
   test('SK-ACC-030 repeated failures are eventually rate limited', async ({

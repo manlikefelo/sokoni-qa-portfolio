@@ -12,8 +12,8 @@ arithmetic and state transitions. Money, stock, promo validity, order lifecycle.
 is very little client-side logic worth testing in isolation, and a great deal of
 behaviour that only exists once a request has crossed into the database and come back.
 
-That shapes everything below. A conventional pyramid — thousands of unit tests, a
-handful of integration tests, a few end-to-end smoke tests — would be the wrong answer
+That shapes everything below. A conventional pyramid (thousands of unit tests, a
+handful of integration tests, a few end-to-end smoke tests) would be the wrong answer
 here, because the units are mostly trivial and the bugs live in the seams.
 
 ## The shape of the suite, and why it is not a pyramid
@@ -41,7 +41,7 @@ the cart page, so the pricing cases drive the real cart and read the rendered to
 The arithmetic is checked where it is _used_, not where it is defined.
 
 **The defects that matter are integration defects.** A discount computed against the
-wrong base, stock decremented in the wrong order, a cart replaced instead of merged —
+wrong base, stock decremented in the wrong order, a cart replaced instead of merged:
 every one of these lives at a boundary between two correct-looking pieces. No unit test
 of either piece would find them.
 
@@ -67,7 +67,7 @@ Both cases are written up in `TRIAGE_NOTES.md` with the failing test that expose
 ## Why boundary analysis is weighted toward money and pagination
 
 Eight of the ten seeded defects are boundary errors, and that proportion is not
-accidental — it reflects where this kind of application actually breaks.
+accidental. It reflects where this kind of application actually breaks.
 
 **Money.** Every monetary value is an integer count of cents, and there are exactly
 three places a boundary can hide: the free-shipping threshold, the rounding of a
@@ -78,14 +78,14 @@ percentage, and the minimum-spend gate. So:
   shipping is assessed after the discount
 - minimum spend is tested at exactly the threshold and one cent under
 - rounding is tested with quantity and price combinations that land on a half cent,
-  deliberately chosen so the free-shipping rule is _not_ also in play — otherwise one
+  deliberately chosen so the free-shipping rule is _not_ also in play, otherwise one
   defect masks the other, which is exactly what happened on the first attempt at the
   BUG-08 case
 
 The 25 pricing cases in `tests/data/pricing-cases.json` were derived by hand from the
 specification and then checked against an independent reimplementation of PRD 4.5
 before any test consumed them. A baseline captured from the running application would
-have agreed with the application's own mistakes — which is the whole problem with
+have agreed with the application's own mistakes, which is the whole problem with
 recorded expectations.
 
 **Pagination.** 25 products at 12 per page is three pages where the last holds one
@@ -142,7 +142,7 @@ broke the first rule from the second direction: a pricing spec creating a produc
 another worker at the same moment.
 
 The symptom was nasty. `SK-VIS-001` and `SK-CAT-023` passed in isolation and failed in
-a full run — order-dependent failure, the thing the suite is explicitly required not to
+a full run, order-dependent failure, the thing the suite is explicitly required not to
 have. The diagnosis was only possible because the full run and the isolated run
 disagreed; a retry would have made the whole thing look fine.
 
@@ -154,12 +154,12 @@ the test suite's point of view, and the scoped data genuinely cannot touch it.
 
 Tempting, and I chose against it. A reset between spec files would serialise the suite
 around the reset, turning a two-minute parallel run into something much longer, and it
-would hide exactly the class of bug that concurrent access produces — two shoppers
+would hide exactly the class of bug that concurrent access produces: two shoppers
 racing for the last unit of stock is a real scenario with a real test
 (`SK-CHK-021`), and it cannot exist in a suite where only one thing happens at a time.
 
-Where a spec genuinely needs exclusive access to shared state — the cart-merge specs all
-operate on one account, the stock-ceiling specs all set the stock of one variant — it
+Where a spec genuinely needs exclusive access to shared state: the cart-merge specs all
+operate on one account, the stock-ceiling specs all set the stock of one variant. It
 declares `mode: 'serial'` and says why in a comment. That is an honest, local admission
 of a constraint rather than a global policy that removes the constraint by removing the
 parallelism.
@@ -190,7 +190,7 @@ rather than by testing a requirement.
 ## Locators, and why none appear in a spec
 
 Every locator lives in a page object under `tests/pages/`. No spec file contains a
-`getByTestId` call — that is enforced by review and is easy to check with a grep.
+`getByTestId` call, that is enforced by review and is easy to check with a grep.
 
 The reason is not tidiness. It is that the page object is the only place a _waiting
 strategy_ can live consistently. When `setQuantity` needed to stop returning before the
@@ -206,7 +206,7 @@ never fail anything.
 
 **Cross-browser visual baselines.** Screenshots are Chromium-only. Font rasterisation
 differs between engines and between operating systems, so per-browser baselines produce
-failures that mean nothing — and a suite that cries wolf gets ignored. The functional
+failures that mean nothing, and a suite that cries wolf gets ignored. The functional
 specs run across Chromium, Firefox, WebKit and Mobile Chrome; only the pixel comparison
 is narrowed. CI generates its own Linux baselines per run rather than pretending the
 committed Windows set is portable.
@@ -224,7 +224,7 @@ about production throughput.
 **Email delivery.** The application logs instead of sending, so there is nothing to
 assert beyond the log line.
 
-**Penetration testing.** The security specs assert that the PRD 7 controls hold —
+**Penetration testing.** The security specs assert that the PRD 7 controls hold,
 headers present, cookies flagged, ownership enforced, failure messages identical. They
 do not attempt to defeat those controls, which is a different discipline needing
 different tools and explicit authorisation.

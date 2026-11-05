@@ -4,7 +4,7 @@
  * Product photography is out of scope for this project, but broken images would
  * muddy both the visual-regression baselines and any accessibility pass. These
  * placeholders are generated from the product slug, so they are stable across
- * machines and across runs — a screenshot baseline taken today still matches
+ * machines and across runs: a screenshot baseline taken today still matches
  * tomorrow.
  */
 import { mkdirSync, writeFileSync } from 'fs';

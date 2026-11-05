@@ -1,5 +1,5 @@
 /**
- * The pricing engine. Pure functions only — no database access, no request
+ * The pricing engine. Pure functions only: no database access, no request
  * context, no clock reads beyond what is passed in. Everything here is
  * recomputed server-side at order creation; a client-supplied total is never
  * trusted or even read.

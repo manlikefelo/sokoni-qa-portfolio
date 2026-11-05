@@ -11,15 +11,15 @@ export default defineConfig({
 
   /**
    * Zero retries, deliberately. A test that passes on the second attempt is not a
-   * passing test — it is an unanswered question about the application or the suite.
+   * passing test: it is an unanswered question about the application or the suite.
    * Retries would hide exactly the flakiness this suite exists to rule out. The
    * reasoning is set out in docs/TEST_STRATEGY.md.
    */
   retries: 0,
 
   /**
-   * Specs tagged @serial-global exhaust a process-wide resource — currently just the
-   * rate limiter — and cannot share the application with a parallel suite, so they are
+   * Specs tagged @serial-global exhaust a process-wide resource, currently just the
+   * rate limiter: and cannot share the application with a parallel suite, so they are
    * excluded from the default run and executed separately afterwards.
    *
    * Driven by an environment variable rather than a bare `grepInvert`, because a

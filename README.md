@@ -1,4 +1,4 @@
-# Sokoni — e-commerce platform and QA automation suite
+# Sokoni: e-commerce platform and QA automation suite
 
 [![CI](https://github.com/manlikefelo/sokoni-qa-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/manlikefelo/sokoni-qa-portfolio/actions/workflows/ci.yml)
 
@@ -9,7 +9,7 @@ repository.
 > **This application contains ten deliberately seeded defects.** Every one is documented
 > in [`SEEDED_DEFECTS.md`](./SEEDED_DEFECTS.md), each introduced in its own commit, and
 > the last defect-free commit is tagged `v1.0-clean`. They exist so the suite has real
-> failures to find. Everything outside that list is meant to be correct — including the
+> failures to find. Everything outside that list is meant to be correct, including the
 > whole security layer, where nothing was seeded.
 
 ---
@@ -22,7 +22,7 @@ suite found all ten. It also found **two defects I had not planted**, which stay
 documented, and **six genuine bugs in my own application** that I fixed rather than
 leaving in.
 
-More usefully, it found **sixteen defects in my own tests** — including one case where
+More usefully, it found **sixteen defects in my own tests**, including one case where
 six tests were passing while submitting nothing at all. Those are written up in
 [`docs/TRIAGE_NOTES.md`](./docs/TRIAGE_NOTES.md) with the reasoning, because knowing the
 difference between a broken application and a broken test is most of the job.
@@ -61,7 +61,7 @@ errors, so the suite is weighted accordingly. The free-shipping threshold is tes
 exactly KSh 5,000 and a cent either side, and again where the discount drags the
 post-discount subtotal across it. The 25 pricing cases were derived by hand from the
 specification and checked against an independent reimplementation of the rules _before_
-any test consumed them — a baseline recorded from the application would have agreed with
+any test consumed them: a baseline recorded from the application would have agreed with
 the application's own mistakes.
 
 **Assertions on values, not presence.** `expect(total).toHaveText('KSh 4,150.00')`, never
@@ -70,7 +70,7 @@ the application's own mistakes.
 **Knowing when a test cannot prove what it claims.** Two cases came up where a
 browser-level guard fired before the server check the test was aiming at, so the test
 could not fail. Both moved to the API layer. One case had a helper submitting a form
-bound to nothing — six green tests exercising nothing. That helper now reports whether it
+bound to nothing: six green tests exercising nothing. That helper now reports whether it
 actually submitted, and the test asserts that first.
 
 **Flakiness treated as a defect.** Running the suite with `--repeat-each=2` turned 11
@@ -140,23 +140,23 @@ function of the card number, so every branch is reachable without a sandbox acco
 | Card number           | Outcome                               |
 | --------------------- | ------------------------------------- |
 | `4242 4242 4242 4242` | approved                              |
-| `4000 0000 0000 0002` | declined — card declined              |
-| `4000 0000 0000 0069` | declined — expired card               |
-| `4000 0000 0000 9995` | declined — insufficient funds         |
+| `4000 0000 0000 0002` | declined, card declined               |
+| `4000 0000 0000 0069` | declined, expired card                |
+| `4000 0000 0000 9995` | declined, insufficient funds          |
 | `4000 0000 0000 0119` | gateway error, after a 3 second delay |
-| anything else         | declined — invalid card               |
+| anything else         | declined, invalid card                |
 
 ### Promo codes
 
-| Code        | Effect        | Notes                                                   |
-| ----------- | ------------- | ------------------------------------------------------- |
-| `SAVE10`    | 10% off       | no minimum                                              |
-| `SAVE25`    | 25% off       | minimum spend KSh 3,000                                 |
-| `FLAT500`   | KSh 500 off   | minimum spend KSh 2,000                                 |
-| `EXPIRED20` | 20% off       | expired yesterday — must be rejected                    |
-| `ENDSTODAY` | 15% off       | expires 23:59:59 UTC today — **must still be accepted** |
-| `ONESHOT`   | KSh 1,000 off | single use                                              |
-| `DEAD5`     | 5% off        | inactive — must be rejected                             |
+| Code        | Effect        | Notes                                                  |
+| ----------- | ------------- | ------------------------------------------------------ |
+| `SAVE10`    | 10% off       | no minimum                                             |
+| `SAVE25`    | 25% off       | minimum spend KSh 3,000                                |
+| `FLAT500`   | KSh 500 off   | minimum spend KSh 2,000                                |
+| `EXPIRED20` | 20% off       | expired yesterday, must be rejected                    |
+| `ENDSTODAY` | 15% off       | expires 23:59:59 UTC today, **must still be accepted** |
+| `ONESHOT`   | KSh 1,000 off | single use                                             |
+| `DEAD5`     | 5% off        | inactive, must be rejected                             |
 
 ---
 
@@ -164,11 +164,11 @@ function of the card number, so every branch is reachable without a sandbox acco
 
 ```
 ┌─────────────────────── Test layer (the deliverable) ───────────────────────┐
-│  tests/e2e       214 specs — journeys, by data-testid only                 │
-│  tests/api        34 specs — gateway contract, route-level authorisation   │
-│  tests/a11y       14 specs — axe-core, keyboard traversal, focus           │
-│  tests/visual     10 baselines — desktop and mobile                        │
-│  tests/pages       8 page objects — the only place a locator is written    │
+│  tests/e2e       214 specs - journeys, by data-testid only                 │
+│  tests/api        34 specs - gateway contract, route-level authorisation   │
+│  tests/a11y       14 specs - axe-core, keyboard traversal, focus           │
+│  tests/visual     10 baselines - desktop and mobile                        │
+│  tests/pages       8 page objects - the only place a locator is written    │
 │  tests/fixtures      auth storageState, database helpers, worker scoping   │
 └────────────────────────────────┬───────────────────────────────────────────┘
                                  │ drives a production build
@@ -177,7 +177,7 @@ function of the card number, so every branch is reachable without a sandbox acco
 │                                                                            │
 │  src/app          App Router pages, route handlers, proxy                  │
 │  src/components   Server and Client Components                             │
-│  src/actions      Server Actions — every one authorises and validates      │
+│  src/actions      Server Actions - every one authorises and validates      │
 │  src/schemas      Zod schemas, shared between client and server            │
 │  src/lib          pricing, money, promo, cart, auth, rate limiting         │
 │  prisma           schema, migrations, deterministic seed                   │
@@ -197,11 +197,11 @@ Prisma 6 with SQLite · Auth.js v5 with argon2id · Zod · Playwright · GitHub 
 - **Totals are recomputed server-side** at order creation. A client-submitted price or
   total is ignored entirely.
 - **The suite runs against a production build.** Next.js streams dynamic routes
-  differently in development, and several assertions are about HTTP status codes — a 404
+  differently in development, and several assertions are about HTTP status codes: a 404
   asserted against `next dev` can pass while the same route returns 200 in production.
   That is how two of the four unplanned application defects were found.
 - **Every interactive element carries a `data-testid`**, and no spec file contains a
-  locator. Checkable with `grep -r getByTestId tests/e2e` — it returns nothing.
+  locator. Checkable with `grep -r getByTestId tests/e2e`. It returns nothing.
 
 ---
 
@@ -213,13 +213,13 @@ Every item below is asserted by a test, listed in `docs/TRACEABILITY.md`:
 - argon2id password hashing; an unknown email still performs a verification so response
   timing does not reveal which addresses are registered
 - `HttpOnly`, `SameSite=Lax` session cookies, `Secure` in production
-- rate limiting on login, registration and promo application — 10 per 15 minutes per IP
+- rate limiting on login, registration and promo application: 10 per 15 minutes per IP
 - authorisation resolved from the session inside every server action and route handler;
   the UI hiding a control is never the boundary, and `tests/api/authorization.spec.ts`
   asks the routes directly as every role
 - ownership checks written into the query rather than applied afterwards; another user's
   order returns 404, not 403
-- Zod validation on every action and route input — parsed, never cast
+- Zod validation on every action and route input, parsed, never cast
 - Prisma only, no raw SQL; no `dangerouslySetInnerHTML` anywhere
 - CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Referrer-Policy` and HSTS
 - environment validated with Zod at startup; the process refuses to boot if a variable
@@ -229,8 +229,8 @@ Every item below is asserted by a test, listed in `docs/TRACEABILITY.md`:
 ### The one piece of test-only code
 
 `/api/test-support/reset-rate-limit` clears rate-limit buckets. It answers 404 unless
-`TEST_SUPPORT_TOKEN` is set and matches, and no real deployment sets it. The reasoning —
-and why weakening the limiter instead would have been worse — is in
+`TEST_SUPPORT_TOKEN` is set and matches, and no real deployment sets it. The reasoning,
+and why weakening the limiter instead would have been worse, is in
 `docs/TEST_STRATEGY.md`.
 
 ### Known advisory
@@ -248,7 +248,7 @@ bundle, and the automated fix downgrades Prisma to 6.12. Left as-is deliberately
 Postgres-compatible. Switching provider needs no change to any model body.
 
 `Product.searchText` holds a lowercased copy of the name and description. It is
-maintained on every write but — as a consequence of one of the seeded defects — no longer
+maintained on every write but, as a consequence of one of the seeded defects, no longer
 read by search. See `SEEDED_DEFECTS.md` BUG-09.
 
 ---

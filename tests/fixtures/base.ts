@@ -48,12 +48,12 @@ export const test = base.extend<Pages, WorkerFixtures>({
    * suite would otherwise share one bucket: eight registration specs under
    * --repeat-each is sixteen attempts, and they start refusing each other. Clearing the
    * bucket between tests does not fix it, because a parallel worker can consume the
-   * allowance between the reset and the submission — an inherent race, and chasing it
+   * allowance between the reset and the submission: an inherent race, and chasing it
    * with more resets only narrows the window.
    *
    * Giving each worker its own address removes the contention instead of papering over
    * it. The limiter itself is untouched, still at production strength, and is tested at
-   * its boundary by SK-ACC-030 — which runs alone, with the real shared bucket.
+   * its boundary by SK-ACC-030: which runs alone, with the real shared bucket.
    */
   extraHTTPHeaders: [
     async ({ workerPrefix }, use) => {

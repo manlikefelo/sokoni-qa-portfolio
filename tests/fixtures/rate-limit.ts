@@ -4,7 +4,7 @@ import { request as playwrightRequest } from '@playwright/test';
  * Clears the application's rate-limit buckets.
  *
  * Login, registration and promo application are limited to ten attempts per fifteen
- * minutes per IP — a PRD 7 requirement with its own tests. Every spec in a run shares
+ * minutes per IP: a PRD 7 requirement with its own tests. Every spec in a run shares
  * one IP, so a suite that applies promo codes dozens of times trips the limiter and
  * starts failing for a reason that has nothing to do with what it is testing.
  *

@@ -8,7 +8,7 @@ import { USERS, type UserRole } from './users';
  * relevant storageState instead of driving the login form, so a change to the login
  * page breaks the login specs rather than the whole suite.
  *
- * The login specs themselves deliberately do not use this — they are about logging
+ * The login specs themselves deliberately do not use this. They are about logging
  * in, so they go through the form.
  */
 async function signInAndSave(baseURL: string, role: UserRole): Promise<void> {

@@ -8,7 +8,7 @@ import type { OrderStatus } from '../../pages/admin.page';
  *
  * Parametrised across every from/to pair in the lifecycle, so each transition is
  * named in its own test and a failure says exactly which one broke. Legal transitions
- * must succeed and illegal ones must be refused — including DELIVERED back to
+ * must succeed and illegal ones must be refused: including DELIVERED back to
  * PENDING, which the spec calls out explicitly.
  *
  * The admin UI only offers legal targets from a given status, so reaching an illegal
@@ -42,7 +42,7 @@ test.use({ storageState: USERS.admin.storageState });
  *
  * The order number comes from the shared fixture helper, which guarantees uniqueness
  * across workers. This used to draw a random six-digit suffix, which was only
- * probably unique — and it shared its range with literals hardcoded in other specs,
+ * probably unique: and it shared its range with literals hardcoded in other specs,
  * so it eventually collided. See docs/TRIAGE_NOTES.md.
  */
 async function orderAt(status: OrderStatus, prefix: string) {
@@ -65,7 +65,7 @@ async function removeOrder(orderNumber: string): Promise<void> {
   await testDb.order.deleteMany({ where: { orderNumber } });
 }
 
-test.describe('SK-ADM — order status, legal transitions', () => {
+test.describe('SK-ADM: order status, legal transitions', () => {
   for (const from of ALL_STATUSES) {
     for (const to of LEGAL[from]) {
       test(`SK-ADM-0${ALL_STATUSES.indexOf(from)}${ALL_STATUSES.indexOf(to)} ${from} to ${to} is allowed`, async ({
@@ -134,11 +134,11 @@ test.describe('SK-ADM — order status, legal transitions', () => {
  *
  * A server action is reached by posting to its route with the action id Next.js
  * assigns, which is build-specific. Rather than depend on that, these drive the
- * action the way the application does — through the page — but with the select's
+ * action the way the application does: through the page: but with the select's
  * options replaced so an illegal value can be submitted. The DOM is altered, not the
  * application, and what is being asserted is entirely server-side.
  */
-test.describe('SK-ADM — order status, illegal transitions refused', () => {
+test.describe('SK-ADM: order status, illegal transitions refused', () => {
   /**
    * Transitions out of a non-terminal status. The page renders a form for these, so
    * widening its options is enough to put the request in front of the server.
@@ -189,7 +189,7 @@ test.describe('SK-ADM — order status, illegal transitions refused', () => {
 
   /**
    * The terminal statuses. These render no status form, so the only way to put a
-   * request in front of the action is to reach it the way any client would — through
+   * request in front of the action is to reach it the way any client would, through
    * the page that owns it. DELIVERED to PENDING is the case PRD 4.8 names explicitly.
    */
   const terminalIllegal: Array<{ from: OrderStatus; to: OrderStatus }> = [

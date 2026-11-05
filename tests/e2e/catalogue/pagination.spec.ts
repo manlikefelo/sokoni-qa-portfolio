@@ -5,7 +5,7 @@ import { test, expect } from '../../fixtures/base';
  * numbers plus previous and next, state held in the URL.
  *
  * 25 and 12 were chosen in the PRD precisely because they divide badly: three pages
- * where the last holds a single product. The central assertion is the walk — every
+ * where the last holds a single product. The central assertion is the walk: every
  * page visited, every slug collected, the union compared against the full catalogue.
  * Checking "page 2 shows 12 products" would pass against several broken
  * implementations; checking that the union is exactly the 25 distinct products will
@@ -15,7 +15,7 @@ const TOTAL_PRODUCTS = 25;
 const PAGE_SIZE = 12;
 const EXPECTED_PAGES = Math.ceil(TOTAL_PRODUCTS / PAGE_SIZE); // 3
 
-test.describe('SK-CAT — pagination', () => {
+test.describe('SK-CAT: pagination', () => {
   test('SK-CAT-040 the page count is correct for 25 products at 12 per page', async ({
     cataloguePage,
   }) => {

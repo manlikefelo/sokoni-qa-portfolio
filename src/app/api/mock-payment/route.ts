@@ -66,8 +66,8 @@ const INVALID_CARD: Outcome = {
 };
 
 /**
- * Results are retained per idempotency key so a replayed request — including one
- * arriving while the first is still in flight — yields the same answer rather than
+ * Results are retained per idempotency key so a replayed request, including one
+ * arriving while the first is still in flight: yields the same answer rather than
  * a second charge. The promise, not the resolved value, is what gets cached, which
  * is what makes concurrent duplicates safe.
  */

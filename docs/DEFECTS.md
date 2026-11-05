@@ -1,7 +1,7 @@
 # Defect reports
 
 Every defect the suite found, in a form that could be pasted into a tracker. Expected
-and actual carry concrete values throughout — "the total was wrong" is not a defect
+and actual carry concrete values throughout: "the total was wrong" is not a defect
 report.
 
 Eleven defects are recorded. Ten were seeded deliberately and are documented in
@@ -14,10 +14,10 @@ Chromium, SQLite with the standard seed, single worker unless stated.
 
 ---
 
-## SK-BUG-001 — Percentage discount calculated on subtotal plus shipping
+## SK-BUG-001: Percentage discount calculated on subtotal plus shipping
 
 **Severity:** High **Priority:** P1 **Component:** pricing
-**Status:** open (seeded — BUG-01, commit `beab256`)
+**Status:** open (seeded: BUG-01, commit `beab256`)
 
 **Preconditions:** An order below the KSh 5,000 free-shipping threshold, so shipping is
 a non-zero KSh 350. Promo code `SAVE10` available.
@@ -31,7 +31,7 @@ a non-zero KSh 350. Promo code `SAVE10` available.
 **Expected:** Discount KSh 200.00, being 10% of the KSh 2,000.00 subtotal. Shipping
 unchanged at KSh 350.00. Total **KSh 2,150.00**.
 
-**Actual:** Discount **KSh 235.00**, being 10% of KSh 2,350.00 — the subtotal plus
+**Actual:** Discount **KSh 235.00**, being 10% of KSh 2,350.00: the subtotal plus
 shipping. Total **KSh 2,115.00**, under-charging by KSh 35.00.
 
 **Evidence:** `tests/e2e/pricing/pricing.spec.ts::SK-PRICE-100`, plus SK-PRICE-006,
@@ -49,10 +49,10 @@ for free delivery would price correctly, which is how this would reach productio
 
 ---
 
-## SK-BUG-002 — Cart quantity update does not check available stock
+## SK-BUG-002: Cart quantity update does not check available stock
 
 **Severity:** High **Priority:** P1 **Component:** cart
-**Status:** open (seeded — BUG-02, commit `2766bcc`)
+**Status:** open (seeded: BUG-02, commit `2766bcc`)
 
 **Preconditions:** A variant with `stockQty = 2`, one unit already in the cart.
 
@@ -66,14 +66,14 @@ for free delivery would price correctly, which is how this would reach productio
 stays at 1.
 
 **Actual:** Accepted. The line reads 9, the subtotal reflects 9 units, and the quantity
-survives a page reload — so it reached the database. Checkout can be reached with a
+survives a page reload, so it reached the database. Checkout can be reached with a
 quantity seven units beyond what exists.
 
 **Evidence:** `tests/e2e/cart/cart-operations.spec.ts::SK-CART-023`, confirmed
 persistent by SK-CART-024.
 
-**Root cause:** `updateQuantityAction` in `src/actions/cart.ts` loads the variant — so a
-deleted variant is still caught — but never compares the requested quantity against
+**Root cause:** `updateQuantityAction` in `src/actions/cart.ts` loads the variant, so a
+deleted variant is still caught, but never compares the requested quantity against
 `stockQty`. `addToCartAction` does.
 
 **Suggested fix:** Apply the same check in `updateQuantityAction`. Better, extract it so
@@ -81,10 +81,10 @@ both paths share one implementation and a third path cannot be added without it.
 
 ---
 
-## SK-BUG-003 — Pagination skips the first page of results
+## SK-BUG-003: Pagination skips the first page of results
 
 **Severity:** Medium **Priority:** P1 **Component:** catalogue
-**Status:** open (seeded — BUG-03, commit `47b34f5`)
+**Status:** open (seeded: BUG-03, commit `47b34f5`)
 
 **Preconditions:** The standard seed of 25 active products, 12 per page.
 
@@ -111,15 +111,15 @@ products in any ordering are unreachable.
 
 **Secondary impact worth noting:** this also breaks _search_. Any query matching a single
 product shows "Showing 1–1 of 1 products" with an empty grid, because the one match is
-skipped. Eight search specs failed for this reason, not because search itself is broken —
+skipped. Eight search specs failed for this reason, not because search itself is broken:
 a good illustration of why a failure count overstates the number of problems.
 
 ---
 
-## SK-BUG-004 — Maximum price filter excludes the boundary value
+## SK-BUG-004: Maximum price filter excludes the boundary value
 
 **Severity:** Medium **Priority:** P2 **Component:** catalogue
-**Status:** open (seeded — BUG-04, commit `1559943`)
+**Status:** open (seeded: BUG-04, commit `1559943`)
 
 **Preconditions:** Oraimo 20000mAh Power Bank, one variant at exactly KSh 3,450.00, the
 only variant at that price.
@@ -144,10 +144,10 @@ the one-product difference and SK-CAT-024 confirming the minimum bound is correc
 
 ---
 
-## SK-BUG-005 — Guest cart replaces the user cart on sign-in
+## SK-BUG-005: Guest cart replaces the user cart on sign-in
 
 **Severity:** High **Priority:** P1 **Component:** cart
-**Status:** open (seeded — BUG-05, commit `4380c4c`)
+**Status:** open (seeded: BUG-05, commit `4380c4c`)
 
 **Preconditions:** Customer `asha@example.com` with a saved cart containing
 `FASH-CREW-L-WHT` × 2 and `HOME-NX18-STL` × 1. A signed-out session with
@@ -160,7 +160,7 @@ the one-product difference and SK-CAT-024 confirming the minimum bound is correc
 3. Open `/cart`.
 
 **Expected:** Three lines. `FASH-WALL-BRN` × 1 from the guest cart, `HOME-NX18-STL` × 1
-from the saved cart, and `FASH-CREW-L-WHT` × **5** — the two quantities summed and then
+from the saved cart, and `FASH-CREW-L-WHT` × **5**: the two quantities summed and then
 capped at available stock.
 
 **Actual:** Two lines. `FASH-WALL-BRN` × 1 and `FASH-CREW-L-WHT` × **3**.
@@ -178,10 +178,10 @@ existing quantity, cap at `stockQty`, then delete only the guest cart.
 
 ---
 
-## SK-BUG-006 — Stock is consumed by declined payments
+## SK-BUG-006: Stock is consumed by declined payments
 
 **Severity:** Critical **Priority:** P0 **Component:** checkout
-**Status:** open (seeded — BUG-06, commit `7436161`)
+**Status:** open (seeded: BUG-06, commit `7436161`)
 
 **Preconditions:** A product with `stockQty = 6`.
 
@@ -220,7 +220,7 @@ payment.
 **Suggested fix:** Move the decrement inside the post-approval transaction, keeping the
 conditional `updateMany` guard that prevents a concurrent checkout from driving stock
 negative. If a reservation model is genuinely wanted, it needs an explicit release on
-every failure path and a timeout for abandoned checkouts — materially more work than
+every failure path and a timeout for abandoned checkouts, materially more work than
 re-ordering two calls.
 
 **Why P0:** this is silent inventory loss proportional to declined-payment volume. A
@@ -229,10 +229,10 @@ single order.
 
 ---
 
-## SK-BUG-007 — Promo code expiring today is rejected all day
+## SK-BUG-007: Promo code expiring today is rejected all day
 
 **Severity:** Medium **Priority:** P2 **Component:** promo
-**Status:** open (seeded — BUG-07, commit `b0ee2a0`)
+**Status:** open (seeded: BUG-07, commit `b0ee2a0`)
 
 **Preconditions:** Seeded code `ENDSTODAY`, 15% off, expiring at 23:59:59 UTC today.
 
@@ -266,10 +266,10 @@ the day such campaigns get the most traffic.
 
 ---
 
-## SK-BUG-008 — Percentage discount rounded per line rather than once
+## SK-BUG-008: Percentage discount rounded per line rather than once
 
 **Severity:** Medium **Priority:** P3 **Component:** pricing
-**Status:** open (seeded — BUG-08, commit `f5c518f`)
+**Status:** open (seeded: BUG-08, commit `f5c518f`)
 
 **Preconditions:** Five cart lines at KSh 1,111.15 each, subtotal KSh 5,555.75. The
 post-discount subtotal stays above the free-shipping threshold, so shipping is KSh 0.00
@@ -281,10 +281,10 @@ and SK-BUG-001 contributes nothing to this case.
 2. Confirm subtotal KSh 5,555.75 and shipping KSh 0.00.
 3. Apply `SAVE10`.
 
-**Expected:** Discount **KSh 555.58** — 10% of KSh 5,555.75 is KSh 555.575, rounded
+**Expected:** Discount **KSh 555.58**: 10% of KSh 5,555.75 is KSh 555.575, rounded
 half-up once. Total **KSh 5,000.17**.
 
-**Actual:** Discount **KSh 555.60** — each line's share of KSh 111.115 rounded to
+**Actual:** Discount **KSh 555.60**: each line's share of KSh 111.115 rounded to
 KSh 111.12, then summed. Total **KSh 5,000.15**. Two cents over-discounted.
 
 **Evidence:** `tests/e2e/pricing/pricing.spec.ts::SK-PRICE-102`, with SK-PRICE-019 to
@@ -303,10 +303,10 @@ larger error masks this one. The reproduction above is chosen so shipping is zer
 
 ---
 
-## SK-BUG-009 — Product search is case-sensitive
+## SK-BUG-009: Product search is case-sensitive
 
 **Severity:** Medium **Priority:** P2 **Component:** catalogue
-**Status:** open (seeded — BUG-09, commit `efc43f5`)
+**Status:** open (seeded: BUG-09, commit `efc43f5`)
 
 **Steps to reproduce:**
 
@@ -336,17 +336,17 @@ product descriptions. A smoke test using one lucky search term would pass.
 
 ---
 
-## SK-BUG-010 — Order status transitions are not validated
+## SK-BUG-010: Order status transitions are not validated
 
 **Severity:** Medium **Priority:** P2 **Component:** admin
-**Status:** open (seeded — BUG-10, commit `1916851`)
+**Status:** open (seeded: BUG-10, commit `1916851`)
 
 **Preconditions:** Admin session. An order in any status.
 
 **Steps to reproduce:**
 
 1. Open a `DELIVERED` order at `/admin/orders/{id}`. The page correctly shows
-   "DELIVERED is a final status — no further changes are possible."
+   "DELIVERED is a final status: no further changes are possible."
 2. Submit a status update naming that order with target `PENDING`.
 3. Reload the order.
 
@@ -367,7 +367,7 @@ PRD 4.8. All 18 are accepted. Examples:
 
 **Evidence:** `tests/e2e/admin/order-status.spec.ts::SK-ADM-100` to `SK-ADM-205`,
 parametrised across every illegal pair. The nine legal transitions all pass, so the
-lifecycle is not merely broken — it is unenforced.
+lifecycle is not merely broken. It is unenforced.
 
 **Root cause:** `updateOrderStatusAction` in `src/actions/admin.ts` validates that the
 submitted value is a member of the `OrderStatus` enum and then writes it. The
@@ -379,14 +379,14 @@ when it returns false.
 
 **Note on reachability:** not reproducible by clicking through the interface, because
 the dropdown only offers legal targets. That is exactly why it needs an action-level
-test — the UI filtering its own options is not a server-side guarantee.
+test: the UI filtering its own options is not a server-side guarantee.
 
 ---
 
-## SK-BUG-011 — Price sort disagrees with the price displayed on the card
+## SK-BUG-011: Price sort disagrees with the price displayed on the card
 
 **Severity:** Low **Priority:** P3 **Component:** catalogue
-**Status:** open — **unplanned; not one of the ten seeded defects**
+**Status:** open, **unplanned; not one of the ten seeded defects**
 
 **Preconditions:** Tefal Non-Stick Frying Pan, with variants at KSh 2,450.00 (24cm) and
 KSh 2,950.00 (28cm), and `basePriceCents` of 295000.
@@ -408,13 +408,13 @@ reason.
 
 **Root cause:** `buildOrderBy` orders on `Product.basePriceCents`, while `ProductCard`
 renders `lowestVariantPrice(product)`. The two agree for 24 of the 25 seeded products,
-which is why this is subtle — only the frying pan has a variant cheaper than its base
+which is why this is subtle, only the frying pan has a variant cheaper than its base
 price.
 
 **Suggested fix:** Order by the lowest variant price so the sort key and the displayed
 figure are the same value. On Postgres that is a lateral join or a maintained
 denormalised column; on SQLite via Prisma it likely needs the column. Alternatively,
-display `basePriceCents` — but showing a price higher than the cheapest purchasable
+display `basePriceCents`, but showing a price higher than the cheapest purchasable
 variant is worse for the shopper.
 
 **Why this is the interesting one:** it was not planted. It came from a test that read
@@ -428,39 +428,39 @@ control had the right label selected. A presence-style assertion would have pass
 Recorded for completeness. Both were fixed before `v1.0-clean` was tagged, so neither
 is reproducible on any committed revision.
 
-### SK-BUG-012 — `notFound()` returned HTTP 200 _(fixed)_
+### SK-BUG-012: `notFound()` returned HTTP 200 _(fixed)_
 
 A `loading.tsx` at the application root wrapped every route in a Suspense boundary.
 Next.js streams suspended routes, which commits the response status before the page body
-runs — so an unknown product slug rendered the not-found page correctly while the status
+runs, so an unknown product slug rendered the not-found page correctly while the status
 line had already gone out as `200`.
 
 A test asserting only on visible text would have passed. Found because the status code
 was asserted explicitly. Fixed by moving the catalogue's Suspense boundary inside the
 page component, leaving `products/[slug]` free to set its own status.
 
-### SK-BUG-013 — Admin and account routes leaked 200 responses _(fixed)_
+### SK-BUG-013: Admin and account routes leaked 200 responses _(fixed)_
 
 The same streaming behaviour meant `/admin` returned 200 to a non-admin while rendering
 the not-found page, and `/account` returned 200 to an anonymous visitor while rendering
 the login redirect. The gating worked; the HTTP semantics did not.
 
 Fixed with `src/proxy.ts`, which resolves both checks before the response begins. The
-server-side checks in the pages and actions were left in place — the proxy exists to make
+server-side checks in the pages and actions were left in place: the proxy exists to make
 the status codes honest, not to replace the authorisation boundary.
 
-### SK-BUG-014 — Promo rate limiter counted successful applications _(fixed)_
+### SK-BUG-014: Promo rate limiter counted successful applications _(fixed)_
 
 `applyPromoAction` counted every attempt against the ten-per-fifteen-minutes limit,
 including successful ones, while `loginAction` already cleared its bucket on success. A
 shopper who legitimately applied a valid code on ten separate orders was refused the
 eleventh with "Too many attempts."
 
-Found while investigating why the test suite was being rate limited — the investigation
+Found while investigating why the test suite was being rate limited: the investigation
 turned up a customer-facing bug rather than a test problem. Fixed by calling
 `resetRateLimit` after a successful application, matching the login path.
 
-### SK-BUG-015 — Inline auth links distinguishable by colour alone _(fixed)_
+### SK-BUG-015: Inline auth links distinguishable by colour alone _(fixed)_
 
 The "Register" and "Sign in" links embedded in sentences on the auth pages carried
 `hover:underline`, so at rest they differed from the surrounding text only in colour.
@@ -477,7 +477,7 @@ permanent underline.
 These came later, from running the suite with the seeding commits reverted and comparing
 the browsers against each other. Unlike the section above, they postdate `v1.0-clean`.
 
-### SK-BUG-016 — No way to sign out on a phone _(fixed)_
+### SK-BUG-016: No way to sign out on a phone _(fixed)_
 
 The sign-out button sat in the desktop header, which is hidden below the `md` breakpoint,
 and the mobile menu didn't offer one. A shopper on a phone stayed signed in with no way
@@ -486,7 +486,7 @@ out from the navigation.
 Found by `SK-ACC-024` and `SK-ACC-054` failing only on Mobile Chrome. Fixed by adding the
 button to the mobile menu.
 
-### SK-BUG-017 — A good card was refused after one decline _(fixed)_
+### SK-BUG-017: A good card was refused after one decline _(fixed)_
 
 `PaymentForm` reused one idempotency key for every attempt, and the gateway retains its
 result per key. After a decline, retrying with a valid card replayed the stored "Your card
@@ -496,7 +496,7 @@ was declined" without ever evaluating the new card, until the shopper reloaded t
 the defect stayed hidden until the test also failed with the seeds reverted. Fixed by
 issuing a new key after a refused attempt.
 
-### SK-BUG-018 — A percent sign in search matches every product _(open, clean code only)_
+### SK-BUG-018: A percent sign in search matches every product _(open, clean code only)_
 
 **Severity:** Low **Priority:** P3 **Component:** catalogue
 

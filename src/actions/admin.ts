@@ -14,7 +14,7 @@ export interface AdminResult {
 /**
  * Every admin action re-checks the role from the session. The navigation hides
  * these controls from ordinary users, but hiding a control is not a security
- * boundary — a non-admin invoking the action directly gets the same answer as one
+ * boundary: a non-admin invoking the action directly gets the same answer as one
  * hitting a route they may not see.
  */
 const NOT_FOUND: AdminResult = { ok: false, message: 'Not found.' };

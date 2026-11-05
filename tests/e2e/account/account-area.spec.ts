@@ -13,7 +13,7 @@ import { resetRateLimits } from '../../fixtures/rate-limit';
  */
 test.use({ storageState: USERS.customer.storageState });
 
-test.describe('SK-ACC — order history and ownership', () => {
+test.describe('SK-ACC: order history and ownership', () => {
   // Minted per worker rather than hardcoded. The previous literals sat inside the
   // range order-status.spec.ts draws from at random, so a parallel worker could take
   // one, fail this file's beforeAll on the unique orderNumber column, and leave every
@@ -75,7 +75,7 @@ test.describe('SK-ACC — order history and ownership', () => {
 
   /**
    * Ownership through the UI. Requesting another customer's order by number must
-   * produce the not-found page, not a forbidden message — a 403 would confirm the
+   * produce the not-found page, not a forbidden message: a 403 would confirm the
    * order exists.
    */
   test('SK-ACC-043 requesting another user’s order shows not found', async ({
@@ -95,7 +95,7 @@ test.describe('SK-ACC — order history and ownership', () => {
   });
 });
 
-test.describe('SK-ACC — profile', () => {
+test.describe('SK-ACC: profile', () => {
   test('SK-ACC-050 the profile shows the signed-in user’s details', async ({ accountPage }) => {
     await accountPage.gotoProfile();
 
@@ -131,7 +131,7 @@ test.describe('SK-ACC — profile', () => {
   /**
    * The happy path, on a throwaway account rather than on the shared seeded customer.
    * Changing the seeded customer's password would invalidate the storageState every
-   * other spec in this file depends on — a side effect that would be invisible until
+   * other spec in this file depends on: a side effect that would be invisible until
    * something unrelated failed.
    */
   test('SK-ACC-054 a valid password change succeeds and the new password works', async ({
@@ -188,7 +188,7 @@ test.describe('SK-ACC — profile', () => {
  * The address book. Serialised, because these specs share one account's addresses and
  * each builds on a known starting state.
  */
-test.describe('SK-ACC — address book', () => {
+test.describe('SK-ACC: address book', () => {
   test.describe.configure({ mode: 'serial' });
 
   const FIXTURE = {

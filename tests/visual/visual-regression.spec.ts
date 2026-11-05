@@ -6,7 +6,7 @@ import { createScopedProduct, cleanupScopedData } from '../fixtures/db';
  *
  * Restricted to Chromium at two viewports. Font rasterisation differs between engines
  * and between platforms, so maintaining baselines per browser produces churn that
- * teaches nothing — a Firefox baseline failing because of sub-pixel antialiasing is
+ * teaches nothing: a Firefox baseline failing because of sub-pixel antialiasing is
  * noise, and noise is how a suite loses its audience.
  *
  * Cart and checkout screenshots use a product this spec creates, because a screenshot
@@ -14,7 +14,7 @@ import { createScopedProduct, cleanupScopedData } from '../fixtures/db';
  * product images are generated SVGs rather than photographs, which is what makes these
  * baselines stable at all.
  */
-test.describe('SK-VIS — visual baselines', () => {
+test.describe('SK-VIS: visual baselines', () => {
   /**
    * Serialised with a fixed fixture prefix rather than a per-worker one. The fixture
    * product's name is rendered on screen, so a prefix carrying the worker index would

@@ -13,7 +13,7 @@ import cases from '../../data/pricing-cases.json';
  * The pricing engine, driven through the real cart, per PRD 4.5.
  *
  * Expected figures in tests/data/pricing-cases.json were derived by hand from the
- * specification, not captured from the application — a baseline recorded from the
+ * specification, not captured from the application: a baseline recorded from the
  * system under test would agree with whatever that system does, including its
  * mistakes.
  *
@@ -46,7 +46,7 @@ function money(cents: number): string {
  */
 const SEEDED_CODES = new Set(['SAVE10', 'SAVE25', 'FLAT500', 'ENDSTODAY', 'ONESHOT']);
 
-test.describe('SK-PRICE — pricing engine through the cart', () => {
+test.describe('SK-PRICE: pricing engine through the cart', () => {
   // Promo application is rate limited by IP, and this file applies codes dozens of
   // times from one address. The buckets are cleared between tests so the limiter does
   // not start failing tests for the wrong reason. See tests/fixtures/rate-limit.ts.
@@ -136,7 +136,7 @@ test.describe('SK-PRICE — pricing engine through the cart', () => {
  * below the free-shipping threshold, so shipping is a visible KSh 350 and any leakage
  * shows up as a concrete difference rather than being hidden by a zero.
  */
-test.describe('SK-PRICE — discount scope', () => {
+test.describe('SK-PRICE: discount scope', () => {
   test.beforeEach(async ({ baseURL }) => {
     await resetRateLimits(baseURL ?? 'http://localhost:3000');
   });
@@ -193,7 +193,7 @@ test.describe('SK-PRICE — discount scope', () => {
 
     try {
       // KSh 5,200 qualifies for free shipping, but 10% off brings it to KSh 4,680,
-      // which does not — so shipping must reappear.
+      // which does not, so shipping must reappear.
       const product = await createScopedProduct({
         prefix,
         name: 'Threshold Crossing Fixture',
@@ -231,7 +231,7 @@ test.describe('SK-PRICE — discount scope', () => {
 
     try {
       // Five lines at KSh 1,111.15. Each line's 10% share is 111.115, which rounds to
-      // 111.12 — five of those sum to 555.60. Computed once on the KSh 5,555.75
+      // 111.12: five of those sum to 555.60. Computed once on the KSh 5,555.75
       // subtotal the discount is 555.575, which rounds to 555.58. The post-discount
       // subtotal stays above the free-shipping threshold, so shipping is zero and
       // cannot mask the two-cent difference.
@@ -315,7 +315,7 @@ test.describe('SK-PRICE — discount scope', () => {
  * is already in the cart must be reflected, because the cart holds a reference to the
  * variant rather than a copy of its price.
  */
-test.describe('SK-PRICE — server-side recomputation', () => {
+test.describe('SK-PRICE: server-side recomputation', () => {
   test('SK-PRICE-110 a price change is picked up by the cart', async ({
     productPage,
     cartPage,

@@ -22,7 +22,7 @@ const A = 'FASH-WALL-BRN'; // guest only
 const B = 'FASH-CREW-L-WHT'; // in both carts
 const C = 'HOME-NX18-STL'; // user only
 
-test.describe('SK-CART — merge on login', () => {
+test.describe('SK-CART: merge on login', () => {
   test.describe.configure({ mode: 'serial' });
 
   /**

@@ -21,7 +21,7 @@ import {
  */
 const ORDER_KEY_PREFIX = 'api-authz';
 
-test.describe('SK-API — route-level authorisation', () => {
+test.describe('SK-API: route-level authorisation', () => {
   test.afterAll(async () => {
     await cleanupScopedOrders(ORDER_KEY_PREFIX);
   });
@@ -77,7 +77,7 @@ test.describe('SK-API — route-level authorisation', () => {
   /**
    * Uses a product created for this test rather than deactivating a seeded one.
    * Deactivating a shared product would change the catalogue under every other spec
-   * running in parallel — the sort, filter and pagination assertions all count on the
+   * running in parallel: the sort, filter and pagination assertions all count on the
    * seeded 25 being active.
    */
   test('SK-API-025 an inactive product is indistinguishable from a missing one', async ({
@@ -108,7 +108,7 @@ test.describe('SK-API — route-level authorisation', () => {
 
   /**
    * Ownership. Customer A requests customer B's order by its number and must get a
-   * 404 — the same answer an order that does not exist would give.
+   * 404: the same answer an order that does not exist would give.
    */
   test('SK-API-026 a user cannot read another user’s order', async ({ browser }) => {
     const orderNumber = uniqueOrderNumber();

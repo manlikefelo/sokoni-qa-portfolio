@@ -8,7 +8,7 @@ import { variantBySku, setStock, stockOf } from '../../fixtures/db';
  * These specs run as a guest, so each gets its own cart via its own browser context
  * and they cannot interfere with one another.
  */
-test.describe('SK-CART — cart operations', () => {
+test.describe('SK-CART: cart operations', () => {
   test('SK-CART-001 an empty cart shows the empty state and a link to the shop', async ({
     cartPage,
   }) => {
@@ -211,10 +211,10 @@ test.describe('SK-CART — cart operations', () => {
 
 /**
  * The stock ceiling. PRD 4.3 is explicit that quantity may never exceed stockQty "on
- * every path that can change quantity" — so each path is tested separately rather
+ * every path that can change quantity": so each path is tested separately rather
  * than trusting that one shared check covers them all.
  */
-test.describe('SK-CART — stock ceiling', () => {
+test.describe('SK-CART: stock ceiling', () => {
   // These specs each set the stock of one variant to suit the boundary they are
   // checking, so they must not run concurrently with each other. Serial mode is the
   // honest way to say that: the alternative is a variant per test, which would mean

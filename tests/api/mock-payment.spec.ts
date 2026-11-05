@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * The mock gateway contract, per PRD 6. Tested at the route level with the request
- * fixture — no browser involved, because the contract is about HTTP, not about what
+ * fixture: no browser involved, because the contract is about HTTP, not about what
  * the checkout page does with the answer.
  */
 const ENDPOINT = '/api/mock-payment';
@@ -29,7 +29,7 @@ function key(label: string): string {
   return `api-${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-test.describe('SK-API — mock payment gateway', () => {
+test.describe('SK-API: mock payment gateway', () => {
   const outcomes = [
     {
       id: 'SK-API-001',
@@ -109,7 +109,7 @@ test.describe('SK-API — mock payment gateway', () => {
 
   /**
    * The gateway-error card is documented as taking three seconds. The assertion is on
-   * the response, not on elapsed time — timing assertions are the fastest route to a
+   * the response, not on elapsed time: timing assertions are the fastest route to a
    * flaky suite. The only thing checked about duration is that the call did not
    * return instantly, which is the behaviour being described.
    */

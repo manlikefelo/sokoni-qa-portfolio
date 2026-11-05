@@ -27,7 +27,7 @@ export default async function OrderDetailPage({
 
   /**
    * The ownership check is part of the query, not a branch after it. Asking for
-   * somebody else's order yields 404 rather than 403 — a 403 would confirm the
+   * somebody else's order yields 404 rather than 403: a 403 would confirm the
    * order exists, which is information the caller has no right to.
    */
   const order = await db.order.findFirst({

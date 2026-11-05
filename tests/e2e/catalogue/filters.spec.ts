@@ -12,7 +12,7 @@ const SEED_CATEGORIES = [...CataloguePage.SEED_CATEGORIES];
  * a range tells you nothing; the question is what happens at exactly the boundary,
  * which is where off-by-one errors live.
  */
-test.describe('SK-CAT — catalogue filters', () => {
+test.describe('SK-CAT: catalogue filters', () => {
   test('SK-CAT-020 a single category narrows to that category', async ({ cataloguePage }) => {
     await cataloguePage.goto({ categories: ['fashion'] });
 
@@ -76,7 +76,7 @@ test.describe('SK-CAT — catalogue filters', () => {
   });
 
   /**
-   * The maximum bound — the mirror of the test above, and the one that matters. The
+   * The maximum bound: the mirror of the test above, and the one that matters. The
    * PRD states both bounds are inclusive, so a product at exactly the maximum must
    * appear.
    */

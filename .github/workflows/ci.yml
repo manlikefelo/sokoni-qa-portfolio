@@ -35,7 +35,7 @@ jobs:
         run: npx tsc --noEmit
 
   test:
-    name: E2E — ${{ matrix.project }}
+    name: E2E - ${{ matrix.project }}
     runs-on: ubuntu-latest
     # Real TLS, because a production build mints Secure cookies and WebKit on Linux does
     # not keep them over plain http://localhost. See scripts/https-proxy.mjs.

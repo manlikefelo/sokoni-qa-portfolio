@@ -9,7 +9,7 @@ import { env, isProduction } from '@/lib/env';
  * Next.js streams dynamic routes, which means the response status is committed
  * before a `notFound()` deeper in the tree can influence it: the not-found UI
  * renders, but the status line has already gone out as 200. Anything that must be
- * an honest 404 or a redirect — admin gating and the signed-in account area — is
+ * an honest 404 or a redirect: admin gating and the signed-in account area: is
  * therefore resolved here, where the status is still ours to set.
  *
  * These checks do not replace the server-side authorisation in the pages and
@@ -32,7 +32,7 @@ export default async function proxy(request: NextRequest) {
 
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
     // A non-admin is told the route does not exist rather than that it is
-    // forbidden — a 403 would confirm the admin surface is there.
+    // forbidden: a 403 would confirm the admin surface is there.
     if (token?.role !== 'ADMIN') {
       return NextResponse.rewrite(new URL('/not-found', request.url), { status: 404 });
     }

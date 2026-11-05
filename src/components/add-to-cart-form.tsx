@@ -15,7 +15,7 @@ export interface VariantOption {
 
 /**
  * Variant selection, quantity and add-to-cart. The quantity ceiling follows the
- * selected variant's stock, but the server action re-checks it — the input bound is
+ * selected variant's stock, but the server action re-checks it: the input bound is
  * a convenience, not the control.
  */
 export function AddToCartForm({ variants }: { variants: VariantOption[] }) {

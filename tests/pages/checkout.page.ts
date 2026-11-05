@@ -205,7 +205,7 @@ export class CheckoutPage extends BasePage {
   }
 
   /**
-   * Submits the address step and waits for the outcome — either the review step, or a
+   * Submits the address step and waits for the outcome, either the review step, or a
    * validation message on the form. Returning on the click alone would let a caller
    * assert against a page that has not changed yet.
    */
@@ -231,7 +231,7 @@ export class CheckoutPage extends BasePage {
   }
 
   /**
-   * Submits the payment and waits for whichever outcome arrives — the confirmation
+   * Submits the payment and waits for whichever outcome arrives: the confirmation
    * page or an error banner. The gateway-error card deliberately takes three seconds;
    * the wait is on the resulting UI state, never on elapsed time.
    */

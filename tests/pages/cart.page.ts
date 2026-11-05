@@ -95,7 +95,7 @@ export class CartPage extends BasePage {
   }
 
   /**
-   * Changes a line quantity the way a shopper does — type, then leave the field. The
+   * Changes a line quantity the way a shopper does, type, then leave the field. The
    * commit happens on blur and the server action that follows is asynchronous, so this
    * waits for the line total to settle on the new figure before returning.
    *

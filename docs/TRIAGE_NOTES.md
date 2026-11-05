@@ -5,32 +5,32 @@ failure is classified as a genuine application defect or a bad test before anyth
 changed. Kept in the repository because the reasoning is the interesting part, and
 because a bad test found this way is worth as much as a bug.
 
-## Catalogue specs — first run
+## Catalogue specs: first run
 
 22 of 46 failed. Triage:
 
 | Failure                                     | Verdict            | Cause                                                                                                                                                                                                                                                |
 | ------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | SK-CAT-001/002/003, 004 (×3), 005, 009, 010 | defect             | The result count reads "1 of 1" but no card renders. Pagination skips the only match. Traced to the `skip` arithmetic, not to search.                                                                                                                |
-| SK-CAT-030                                  | defect             | Same pagination cause — a single-result filtered view renders nothing.                                                                                                                                                                               |
+| SK-CAT-030                                  | defect             | Same pagination cause: a single-result filtered view renders nothing.                                                                                                                                                                                |
 | SK-CAT-025/026/027                          | defect             | Maximum price bound is exclusive; a product at exactly the ceiling is missing.                                                                                                                                                                       |
 | SK-CAT-041/043/045/048                      | defect             | Page walk surfaces 13 distinct products, not 25. Pagination arithmetic.                                                                                                                                                                              |
 | SK-CAT-061/064/066                          | defect (unplanned) | Price sort uses `basePriceCents`; the card displays the lowest variant price. The two disagree for `tefal-non-stick-frying-pan`. Logged as SK-BUG-011.                                                                                               |
 | SK-CAT-062                                  | **bad test**       | My oracle used `localeCompare`, which ignores case. The database orders by byte value, so `TP-Link` precedes `Tefal`. The application is self-consistent; the assertion was wrong. Fixed to compare against the same collation the application uses. |
-| SK-CAT-063                                  | defect             | "Newest" shows the wrong product first — pagination again, page 1 is not the first page.                                                                                                                                                             |
+| SK-CAT-063                                  | defect             | "Newest" shows the wrong product first, pagination again, page 1 is not the first page.                                                                                                                                                              |
 
 Note how many distinct-looking failures share one root cause. Eight search failures,
 four pagination failures and a sort failure all trace back to the same `skip`
 expression. Counting failures would overstate the number of problems by a wide margin.
 
-## Cart specs — first run
+## Cart specs: first run
 
 | Failure     | Verdict      | Cause                                                                                                                                                         |
 | ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | SK-CART-040 | defect       | The user's previously saved item is gone after login. The guest cart replaced the user cart rather than merging into it. Exactly the case PRD 4.3 spells out. |
 | SK-CART-021 | **bad test** | See below.                                                                                                                                                    |
 
-### SK-CART-021 — a test that could not reach the thing it was testing
+### SK-CART-021: a test that could not reach the thing it was testing
 
 The test set stock to 4, typed 5 into the quantity field, clicked add, and waited for
 either a success or an error banner. Neither ever appeared.
@@ -40,7 +40,7 @@ browser's own constraint validation refuses to submit the form and reports "Valu
 be less than or equal to 4." The server action is never called, so it has no chance to
 return the error the test was waiting for.
 
-That is correct behaviour — two independent layers, the input bound and the server
+That is correct behaviour: two independent layers, the input bound and the server
 check, and the outer one caught it first. But it means the server-side rule is
 **unreachable through the UI on this path**, and a UI test cannot prove it holds.
 Asserting on the browser's refusal instead would be testing the browser, not Sokoni.
@@ -56,7 +56,7 @@ This is the argument for having an API layer in the suite at all. A defect sitti
 behind a correct client-side guard is invisible to every UI test, and would stay
 invisible until someone removed the guard.
 
-## Pricing specs — first run
+## Pricing specs: first run
 
 All 25 data-driven cases plus the scope and rounding specs. 12 failed, and every
 failure carries an exact expected-versus-actual pair:
@@ -69,7 +69,7 @@ failure carries an exact expected-versus-actual pair:
 ### Two infrastructure problems found on the way, both real
 
 **The rate limiter was counting successful promo applications.** The suite applies
-codes dozens of times from one IP and started getting "Too many attempts" — correct
+codes dozens of times from one IP and started getting "Too many attempts", correct
 behaviour from the limiter, at first glance.
 
 Reading the code, though, `applyPromoAction` counted every attempt including the
@@ -77,7 +77,7 @@ successful ones, while `loginAction` already cleared its bucket on success. The
 limiter exists to stop someone grinding through candidate codes; a shopper who
 successfully applies a valid code on ten separate orders is not doing that, and under
 the old behaviour was locked out of the eleventh. Fixed in the application, not worked
-around in the test — `resetRateLimit` on success, matching the login path.
+around in the test: `resetRateLimit` on success, matching the login path.
 
 This is the more valuable of the two findings. The test run surfaced it, but it is a
 defect a real customer would hit, and nothing in the PRD's own test list would have
@@ -87,61 +87,61 @@ caught it.
 deliberately exercise _rejected_ codes still accumulate against the limit. Weakening
 the limiter would mean no longer testing a security requirement, so the suite clears
 the buckets between specs through `/api/test-support/reset-rate-limit`, gated on a
-`TEST_SUPPORT_TOKEN` that is absent in any real deployment — where the route answers
+`TEST_SUPPORT_TOKEN` that is absent in any real deployment, where the route answers
 404 and does not advertise itself.
 
 The first version of that route also checked `NODE_ENV !== 'production'` and therefore
 404'd during the run, because the suite deliberately tests against a production build.
 The environment variable is the honest control; NODE_ENV was the wrong gate.
 
-## Promo specs — first run
+## Promo specs: first run
 
 8 of 16 failed.
 
 | Failure                     | Verdict      | Evidence                                                                                                                                                     |
 | --------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| SK-PROMO-001, 002 (×3), 008 | defect       | Discount comes out `-KSh 335.00` where `-KSh 300.00` is correct — the same subtotal-plus-shipping error the pricing specs found.                             |
+| SK-PROMO-001, 002 (×3), 008 | defect       | Discount comes out `-KSh 335.00` where `-KSh 300.00` is correct: the same subtotal-plus-shipping error the pricing specs found.                              |
 | SK-PROMO-005                | defect       | `ENDSTODAY`, which expires at 23:59:59 UTC today, is rejected outright.                                                                                      |
 | SK-PROMO-030                | defect       | A code created by the test to expire sixty seconds from now is also rejected, confirming the comparison truncates to a date rather than using the timestamp. |
 | SK-PROMO-011                | **bad test** | See below.                                                                                                                                                   |
 
-### SK-PROMO-011 — a race of my own making
+### SK-PROMO-011: a race of my own making
 
 The test applied a code, reduced the cart quantity so the order fell below the code's
 minimum spend, then navigated and asserted the code had been dropped. It failed, and
-the page snapshot showed the quantity still at 2 — the reduction had not happened yet.
+the page snapshot showed the quantity still at 2: the reduction had not happened yet.
 
 The quantity commit fires on blur and the server action behind it is asynchronous.
 `setQuantity` returned as soon as the field lost focus, so the following navigation
 outran the update and loaded a cart that had not changed.
 
 This is the exact failure mode the suite's reliability rules exist to prevent, and it
-would have been intermittent rather than consistent — the worst kind. The fix is in the
+would have been intermittent rather than consistent: the worst kind. The fix is in the
 page object, not the test: `setQuantity` now waits for the line total to move, or for a
 rejection message to appear, before returning. No call site needed changing and no
 sleep was added anywhere.
 
 Worth noting the shape of it. The assertion was right, the application was right, and
 the test was still wrong. A retry would have "fixed" this and hidden a real race in the
-suite — which is the argument for `retries: 0`.
+suite, which is the argument for `retries: 0`.
 
-## Checkout specs — first run
+## Checkout specs: first run
 
 10 of 16 failed.
 
 | Failure                     | Verdict      | Evidence                                                                                                                                             |
 | --------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | SK-CHK-010 to 014, 016, 017 | defect       | Stock recorded at 6, declined payment attempted, stock read back as 4. A declined payment consumes inventory. The most serious finding in the suite. |
-| SK-CHK-001, 005             | **bad test** | Email never filled — see below.                                                                                                                      |
-| SK-CHK-003                  | **bad test** | Tested through a guard that fires first — see below.                                                                                                 |
+| SK-CHK-001, 005             | **bad test** | Email never filled, see below.                                                                                                                       |
+| SK-CHK-003                  | **bad test** | Tested through a guard that fires first, see below.                                                                                                  |
 
-### SK-CHK-001 and 005 — a conditional on a non-waiting check
+### SK-CHK-001 and 005: a conditional on a non-waiting check
 
 `fillAddress` filled the guest email field only `if (await emailInput.isVisible())`.
 `isVisible()` resolves immediately rather than waiting, so while the client component
 was still hydrating it returned false, the email fill was skipped silently, and the
-form then failed server-side validation for a missing email. The symptom — "review step
-never appeared" — pointed nowhere near the cause.
+form then failed server-side validation for a missing email. The symptom, "review step
+never appeared", pointed nowhere near the cause.
 
 Two fixes in the page object. `fillAddress` now waits for a field common to every
 variant of the form before branching, and uses `count()` rather than `isVisible()` to
@@ -151,10 +151,10 @@ review step or a validation message instead of returning on the click.
 The general lesson: `isVisible()` inside an `if` is a race wearing a disguise. It reads
 like a wait and is not one.
 
-### SK-CHK-003 — the native-validation trap, again
+### SK-CHK-003: the native-validation trap, again
 
 The test supplied `not-an-email@` to a `type="email"` input. The browser refused to
-submit, so the server-side Zod validation never ran and no field error appeared —
+submit, so the server-side Zod validation never ran and no field error appeared,
 exactly the shape of the SK-CART-021 problem, in a different place.
 
 Rewritten to use a phone number that is syntactically fine to the browser (`type="tel"`
@@ -166,7 +166,7 @@ Having hit this twice, it is worth stating as a rule: if a browser-level constra
 reject the input first, a UI test cannot prove the server also rejects it. Pick input
 the browser accepts, or move the test to the API layer.
 
-## Account specs — first run
+## Account specs: first run
 
 17 of 32 passed first time; the rest exposed one infrastructure mistake of mine and
 nothing wrong with the application.
@@ -179,7 +179,7 @@ Everything else passed, including the two assertions worth calling out: registra
 stores an argon2id hash and never the plaintext, and the wrong-password and
 unknown-email messages are byte-identical.
 
-## Admin specs — first run
+## Admin specs: first run
 
 | Failure                                      | Verdict                        | Evidence                                                                                                                                      |
 | -------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -191,7 +191,7 @@ unknown-email messages are byte-identical.
 
 The first version of `forceStatus` handled terminal statuses by building a fresh
 `<form>` in the page and submitting it. That form was never bound to a server action,
-so it posted nowhere — and the test then read the order back, found it unchanged, and
+so it posted nowhere, and the test then read the order back, found it unchanged, and
 reported a pass.
 
 Six tests were green while testing nothing at all. That is worse than a failing test
@@ -215,7 +215,7 @@ the page re-renders showing "no further changes are possible". The transition ha
 succeeded; the witness had disappeared. Now asserted against the persisted status, with
 the banner check replaced by a check that no _error_ is shown.
 
-## Reliability pass — `--repeat-each=2`
+## Reliability pass: `--repeat-each=2`
 
 The suite was green across every area before this, so running each test twice was
 expected to be a formality. It was not: 11 tests failed that had passed consistently in
@@ -230,17 +230,17 @@ each other.
 
 Three attempts at fixing it, and the first two were wrong in instructive ways.
 
-**Attempt one — reset in `beforeEach`.** Worked in a single run and failed under repeat.
+**Attempt one: reset in `beforeEach`.** Worked in a single run and failed under repeat.
 A parallel worker can consume the whole allowance between one test's reset and its
 submission. The window is small, which is exactly what makes it a bad fix: it converts a
 consistent failure into an intermittent one.
 
-**Attempt two — reset immediately before the action, inside the page object.** Narrower
+**Attempt two: reset immediately before the action, inside the page object.** Narrower
 window, same race. Still failing. At this point the pattern was clear: no amount of
 resetting fixes contention over a shared counter, it only makes the collision rarer.
 That is the shape of a fix that will come back as flakiness later.
 
-**Attempt three — give each worker its own bucket.** The application already keys the
+**Attempt three: give each worker its own bucket.** The application already keys the
 limiter on `x-forwarded-for`, which it reads as untrusted input used only as a bucket
 key. A worker-scoped fixture now sets that header to `10.0.0.{workerIndex}`, so each
 worker has its own allowance and there is no contention to race over. No application
@@ -272,16 +272,16 @@ command that was supposed to run it: a `grepInvert` in the config takes preceden
 `--grep` on the command line, so `--grep @serial-global` matched nothing and Playwright
 reported "No tests found".
 
-That is the `forceStatus` problem again in a different guise — a command that appears to
+That is the `forceStatus` problem again in a different guise: a command that appears to
 run a test and runs none. Both filters are now driven by a `SERIAL_ONLY` environment
 variable so the two modes are mutually exclusive by construction, and the script was run
 to confirm it selects exactly one test rather than zero.
 
-## Cross-browser CI — a collision that looked like a browser problem
+## Cross-browser CI: a collision that looked like a browser problem
 
 The suite ran green locally and red in CI, and it was red in a way that pointed at the
-browsers. WebKit failed 163 specs against Chromium's 122; whole files went down at once
-— all of `admin-products`, most of `cart-operations`, all of `account-area`. The shared
+browsers. WebKit failed 163 specs against Chromium's 122; whole files went down at once:
+all of `admin-products`, most of `cart-operations`, all of `account-area`. The shared
 symptom was a cart that stayed empty after an add, and `sokoni.guest` coming back
 `undefined` from `context.cookies()`. That reads unmistakably like a cookie policy
 difference between engines.
@@ -301,7 +301,7 @@ pass in the matrix and never could.
 
 Neither is a defect in anything the suite is meant to test, and together they accounted
 for most of the noise. With both fixed, Chromium failed **exactly the 62 specs that
-catch the ten seeded defects** — the number the test plan predicts. That is the
+catch the ten seeded defects**: the number the test plan predicts. That is the
 measurement everything else had been hiding.
 
 ### The engine theory, and why it was wrong
@@ -312,8 +312,8 @@ app over plain `http://localhost:3000`. Chromium and Firefox treat localhost as 
 trustworthy origin; if WebKit did not, every cookie would be dropped and precisely these
 files would fail.
 
-It was a clean theory and it was wrong. A direct probe — one local HTTP server issuing a
-`Secure` cookie, read back through all three engines — showed Chromium, Firefox **and**
+It was a clean theory and it was wrong. A direct probe: one local HTTP server issuing a
+`Secure` cookie, read back through all three engines, showed Chromium, Firefox **and**
 WebKit all storing it. Running `SK-API-031` alone under WebKit passed as well.
 
 The theory was cheap to test and would have been expensive to assume. Had it gone in as
@@ -347,8 +347,8 @@ looking for a row that did not exist. The cart failures were the same story thro
 guest cookie: the token is minted _by_ the add-to-cart action, so a failed setup meant no
 token, and the absent cookie was a symptom being read as the cause.
 
-Two details made this expensive. The collision is probabilistic — about two draws in
-900,000 — so it surfaced as a different handful of specs on each job and looked like
+Two details made this expensive. The collision is probabilistic (about two draws in
+900,000) so it surfaced as a different handful of specs on each job and looked like
 flakiness. And the loudest symptom was three layers downstream of the fault.
 
 ### The fix
@@ -364,14 +364,14 @@ helper now produces can never collide with it.
 
 Verified at `--workers=2` across the three affected files: no constraint errors, every
 account and authorisation spec green, and the only remaining failures the thirteen
-`SK-ADM` illegal-transition specs — which is BUG-10 being caught, exactly as intended.
+`SK-ADM` illegal-transition specs, which is BUG-10 being caught, exactly as intended.
 
 ### What this is worth
 
 A random suffix is not isolation. It was documented as the safe choice, the comment
 explaining it was right about the risk, and it still collided the moment another spec
 picked a literal from the same range. Test data has to be unique by construction, and
-"unique enough" fails at a rate low enough to look like something else entirely — in
+"unique enough" fails at a rate low enough to look like something else entirely, in
 this case, like a browser bug in a browser that was behaving correctly.
 
 ## A read that could observe the list in two states
@@ -384,7 +384,7 @@ TimeoutError: locator.getAttribute: Timeout 10000ms exceeded.
     at pages/catalogue.page.ts:181
 ```
 
-The page object read the grid in two steps — a `count()`, then a `getAttribute()` per
+The page object read the grid in two steps: a `count()`, then a `getAttribute()` per
 index:
 
 ```ts
@@ -399,10 +399,10 @@ from the old set of cards, and the indexed read then addressed an element that h
 already been replaced. Playwright waited the full timeout for a node that was never
 coming back.
 
-Two things about this are worth stating plainly. It is a **bad test, not a defect** —
+Two things about this are worth stating plainly. It is a **bad test, not a defect**:
 the application paginated correctly throughout. And it was _masking_ a real one: while
 the helper was timing out, `SK-CAT-048` was counted among the 62 expected failures, so
-the assertion it exists to make — that paging forward changes the products shown — was
+the assertion it exists to make, that paging forward changes the products shown, was
 never actually evaluated. A test failing for the wrong reason is indistinguishable from
 a test failing for the right one when all you read is the count.
 
@@ -411,7 +411,7 @@ evaluation, so there is no window in which the grid can change underneath them.
 `visibleNames` already did this with `allInnerTexts()`, which is why it never failed.
 
 Verified with `--repeat-each=2`: `SK-CAT-048` passes on both runs, and every remaining
-failure in the pagination and sort specs is an assertion rather than a timeout — BUG-03
+failure in the pagination and sort specs is an assertion rather than a timeout: BUG-03
 and SK-BUG-011, caught on their merits.
 
 ## The WebKit theory, revisited

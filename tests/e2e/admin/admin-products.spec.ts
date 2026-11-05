@@ -6,7 +6,7 @@ import { AdminPage } from '../../pages/admin.page';
 /**
  * Admin product management and role gating, per PRD 4.8.
  */
-test.describe('SK-ADM — role gating', () => {
+test.describe('SK-ADM: role gating', () => {
   test('SK-ADM-300 a signed-out visitor gets not found on /admin', async ({ page, adminPage }) => {
     const response = await page.goto('/admin');
 
@@ -40,7 +40,7 @@ test.describe('SK-ADM — role gating', () => {
   });
 });
 
-test.describe('SK-ADM — products', () => {
+test.describe('SK-ADM: products', () => {
   test.use({ storageState: USERS.admin.storageState });
 
   test('SK-ADM-310 the admin link is visible to an admin', async ({ page, adminPage }) => {
@@ -269,7 +269,7 @@ test.describe('SK-ADM — products', () => {
   });
 });
 
-test.describe('SK-ADM — order list', () => {
+test.describe('SK-ADM: order list', () => {
   test.use({ storageState: USERS.admin.storageState });
 
   test('SK-ADM-330 the order list is reachable', async ({ adminPage }) => {

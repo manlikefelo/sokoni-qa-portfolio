@@ -52,7 +52,7 @@ async function scan(page: Page) {
   return { blocking, advisory };
 }
 
-test.describe('SK-A11Y — axe-core, anonymous pages', () => {
+test.describe('SK-A11Y: axe-core, anonymous pages', () => {
   const pages = [
     { id: 'SK-A11Y-001', name: 'home', path: '/' },
     { id: 'SK-A11Y-002', name: 'catalogue', path: '/products' },
@@ -75,7 +75,7 @@ test.describe('SK-A11Y — axe-core, anonymous pages', () => {
   }
 });
 
-test.describe('SK-A11Y — axe-core, pages needing state', () => {
+test.describe('SK-A11Y: axe-core, pages needing state', () => {
   test('SK-A11Y-010 a cart with items has no critical or serious violations', async ({
     page,
     productPage,
@@ -151,7 +151,7 @@ test.describe('SK-A11Y — axe-core, pages needing state', () => {
   });
 });
 
-test.describe('SK-A11Y — keyboard and focus', () => {
+test.describe('SK-A11Y: keyboard and focus', () => {
   test('SK-A11Y-020 the skip link is the first thing a keyboard user reaches', async ({ page }) => {
     await page.goto('/products');
     await page.keyboard.press('Tab');

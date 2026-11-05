@@ -11,7 +11,7 @@ const SEED_CATEGORIES = [...CataloguePage.SEED_CATEGORIES];
  * rather than by checking that the select shows the right label. A sort that silently
  * does nothing would pass the latter.
  */
-test.describe('SK-CAT — sorting', () => {
+test.describe('SK-CAT: sorting', () => {
   test('SK-CAT-060 price ascending orders by price, lowest first', async ({ cataloguePage }) => {
     await cataloguePage.goto({ sort: 'price-asc' });
     const prices = await cataloguePage.visiblePricesInCents();

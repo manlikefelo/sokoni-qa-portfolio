@@ -17,7 +17,7 @@ import { resetRateLimits } from '../../fixtures/rate-limit';
  * catalogue or another spec running beside it. Orders are identified by an idempotency
  * key carrying the worker prefix and removed afterwards.
  */
-test.describe('SK-CHK — guest checkout journey', () => {
+test.describe('SK-CHK: guest checkout journey', () => {
   test.beforeEach(async ({ baseURL }) => {
     await resetRateLimits(baseURL ?? 'http://localhost:3000');
   });
@@ -133,8 +133,8 @@ test.describe('SK-CHK — guest checkout journey', () => {
       await cartPage.proceedToCheckout();
 
       /**
-       * The phone number is well-formed as far as the browser is concerned — the
-       * field is type="tel", which carries no format constraint — but it is not a
+       * The phone number is well-formed as far as the browser is concerned: the
+       * field is type="tel", which carries no format constraint, but it is not a
        * Kenyan number, so only the server can reject it. The email is left valid on
        * purpose: an email the browser itself refuses would stop the submission before
        * the server ran, and this test is about server-side validation.
@@ -208,7 +208,7 @@ test.describe('SK-CHK — guest checkout journey', () => {
  * approved. A declined or errored payment must leave all stock untouched." So each
  * case records the stock figure, attempts the payment, and compares.
  */
-test.describe('SK-CHK — payment outcomes and stock invariants', () => {
+test.describe('SK-CHK: payment outcomes and stock invariants', () => {
   test.beforeEach(async ({ baseURL }) => {
     await resetRateLimits(baseURL ?? 'http://localhost:3000');
   });
@@ -448,7 +448,7 @@ test.describe('SK-CHK — payment outcomes and stock invariants', () => {
 /**
  * Idempotency and concurrency, per PRD 4.6.
  */
-test.describe('SK-CHK — idempotency and concurrency', () => {
+test.describe('SK-CHK: idempotency and concurrency', () => {
   test.beforeEach(async ({ baseURL }) => {
     await resetRateLimits(baseURL ?? 'http://localhost:3000');
   });

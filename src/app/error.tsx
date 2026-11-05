@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 
 /**
- * Route-level error boundary. The message shown is always generic — a stack trace
+ * Route-level error boundary. The message shown is always generic: a stack trace
  * or a database error string must never reach the browser.
  */
 export default function RouteError({

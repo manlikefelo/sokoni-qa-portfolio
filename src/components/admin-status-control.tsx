@@ -26,7 +26,7 @@ export function StatusControl({
   if (allowedTargets.length === 0) {
     return (
       <p data-testid="status-terminal" className="text-muted text-sm">
-        {currentStatus} is a final status — no further changes are possible.
+        {currentStatus} is a final status. No further changes are possible.
       </p>
     );
   }

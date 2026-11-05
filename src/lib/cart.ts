@@ -26,7 +26,7 @@ export async function readGuestToken(): Promise<string | null> {
 
 /**
  * Issues a guest token if none exists. Only callable from a server action or
- * route handler — Next.js forbids setting cookies during a render.
+ * route handler: Next.js forbids setting cookies during a render.
  */
 export async function ensureGuestToken(): Promise<string> {
   const store = await cookies();

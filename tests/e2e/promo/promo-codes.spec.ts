@@ -12,11 +12,11 @@ import { resetRateLimits } from '../../fixtures/rate-limit';
  * Promo codes, per PRD 4.4 and the seed table in PRD 8.
  *
  * Expiry is the interesting part. The PRD is explicit that it is exclusive and
- * evaluated on the full UTC timestamp, which makes ENDSTODAY — expiring at 23:59:59
- * today — the case that separates a correct implementation from one that truncates to
+ * evaluated on the full UTC timestamp, which makes ENDSTODAY, expiring at 23:59:59
+ * today: the case that separates a correct implementation from one that truncates to
  * a date.
  */
-test.describe('SK-PROMO — promo code validity', () => {
+test.describe('SK-PROMO: promo code validity', () => {
   test.beforeEach(async ({ baseURL }) => {
     await resetRateLimits(baseURL ?? 'http://localhost:3000');
   });
@@ -299,7 +299,7 @@ test.describe('SK-PROMO — promo code validity', () => {
  * The single-use code. Kept in its own describe block, serialised, and its usage
  * counter restored afterwards, because consuming it is a global side effect.
  */
-test.describe('SK-PROMO — usage limits', () => {
+test.describe('SK-PROMO: usage limits', () => {
   test.describe.configure({ mode: 'serial' });
 
   test.beforeEach(async ({ baseURL }) => {
@@ -375,7 +375,7 @@ test.describe('SK-PROMO — usage limits', () => {
  * Expiry evaluated against a code whose expiry instant this spec controls, so the
  * boundary can be placed exactly rather than relying on what time the suite runs.
  */
-test.describe('SK-PROMO — expiry boundary', () => {
+test.describe('SK-PROMO: expiry boundary', () => {
   test.describe.configure({ mode: 'serial' });
 
   const CODE = 'BOUNDARYTEST';

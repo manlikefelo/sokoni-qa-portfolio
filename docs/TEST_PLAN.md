@@ -1,4 +1,4 @@
-# Test plan — Sokoni
+# Test plan: Sokoni
 
 **System under test:** Sokoni e-commerce platform
 **Author:** Felix Githure
@@ -11,8 +11,8 @@
 Verify that Sokoni behaves as specified in `SOKONI_PRD.md` sections 4 and 5, and that
 the security controls in section 7 hold. The application contains ten deliberately
 seeded defects, documented in `SEEDED_DEFECTS.md`; a secondary purpose of this plan is
-to demonstrate that a suite written from the specification — without reading the defect
-list first — finds all of them.
+to demonstrate that a suite written from the specification, without reading the defect
+list first, finds all of them.
 
 ## 2. Scope
 
@@ -24,7 +24,7 @@ list first — finds all of them.
 | Product detail | Variant selection, stock indication, quantity bounds, add to cart, 404 for unknown and inactive slugs                                                                                                          |
 | Cart           | Guest and authenticated carts, merge on login, quantity changes on every available path, stock ceiling, removal, persistence, live subtotal                                                                    |
 | Promo codes    | All seven seeded codes, case-insensitive entry, expiry including the same-day boundary, minimum spend, usage limits, discount scope                                                                            |
-| Pricing        | Subtotal, discount, shipping threshold, total — 25 data-driven cases plus rounding and scope specs                                                                                                             |
+| Pricing        | Subtotal, discount, shipping threshold, total: 25 data-driven cases plus rounding and scope specs                                                                                                              |
 | Checkout       | Guest and registered journeys, three addressable steps, address validation, all six payment outcomes, stock invariants, idempotency, concurrency                                                               |
 | Accounts       | Registration and its password policy, sign-in, no user enumeration, password change, address book, order history, ownership                                                                                    |
 | Admin          | Role gating, product CRUD, stock adjustment, order status state machine across every transition                                                                                                                |
@@ -51,7 +51,7 @@ a spec file.
 
 **API (`tests/api/`).** Playwright's `request` fixture against route handlers, with no
 browser involved. Covers the gateway contract, and authorisation as distinct from hidden
-UI controls — a customer finding no admin link proves nothing about whether the server
+UI controls: a customer finding no admin link proves nothing about whether the server
 would refuse the request.
 
 **Accessibility (`tests/a11y/`).** `@axe-core/playwright` across all four WCAG 2.0 and
@@ -117,15 +117,15 @@ every run.
 
 ## 7. Risks and mitigations
 
-| Risk                                              | Impact                                           | Mitigation                                                                                                                                                                                                                                                          |
-| ------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Shared seed data mutated by a parallel spec       | Order-dependent failures; a suite nobody trusts  | Fixture products live in a dedicated category excluded from every whole-catalogue assertion. Specs that mutate shared state create their own data or declare serial mode with a stated reason. **This risk materialised during the build** — see `TRIAGE_NOTES.md`. |
-| Rate limiter firing mid-suite                     | Failures unrelated to the requirement under test | Buckets cleared between specs via a token-gated route. The limiter itself is left at production strength and tested at its boundary. **Also materialised, and exposed a real defect in the limiter.**                                                               |
-| Asynchronous server actions outrunning assertions | Intermittent failures; the worst kind            | Every mutating page-object method waits for a settled UI state. No arbitrary waits anywhere. **Materialised three times**, each fixed at the page-object layer.                                                                                                     |
-| Browser-level validation masking server checks    | Tests that cannot fail                           | Inputs chosen so the browser accepts them, or the assertion moved to the API layer. **Materialised twice.**                                                                                                                                                         |
-| A negative test that never submits anything       | False passes indistinguishable from coverage     | Helpers that might not submit return whether they did; the test asserts that first. **Materialised once, costing six false passes.**                                                                                                                                |
-| Visual baselines differing by platform            | Noise that trains people to ignore failures      | Chromium only; CI regenerates Linux baselines per run rather than comparing across platforms.                                                                                                                                                                       |
-| Clock-dependent promo expiry                      | A spec that fails at midnight                    | The same-day boundary specs create a code with an expiry they control, rather than relying on the seeded one alone.                                                                                                                                                 |
+| Risk                                              | Impact                                           | Mitigation                                                                                                                                                                                                                                                         |
+| ------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Shared seed data mutated by a parallel spec       | Order-dependent failures; a suite nobody trusts  | Fixture products live in a dedicated category excluded from every whole-catalogue assertion. Specs that mutate shared state create their own data or declare serial mode with a stated reason. **This risk materialised during the build**, see `TRIAGE_NOTES.md`. |
+| Rate limiter firing mid-suite                     | Failures unrelated to the requirement under test | Buckets cleared between specs via a token-gated route. The limiter itself is left at production strength and tested at its boundary. **Also materialised, and exposed a real defect in the limiter.**                                                              |
+| Asynchronous server actions outrunning assertions | Intermittent failures; the worst kind            | Every mutating page-object method waits for a settled UI state. No arbitrary waits anywhere. **Materialised three times**, each fixed at the page-object layer.                                                                                                    |
+| Browser-level validation masking server checks    | Tests that cannot fail                           | Inputs chosen so the browser accepts them, or the assertion moved to the API layer. **Materialised twice.**                                                                                                                                                        |
+| A negative test that never submits anything       | False passes indistinguishable from coverage     | Helpers that might not submit return whether they did; the test asserts that first. **Materialised once, costing six false passes.**                                                                                                                               |
+| Visual baselines differing by platform            | Noise that trains people to ignore failures      | Chromium only; CI regenerates Linux baselines per run rather than comparing across platforms.                                                                                                                                                                      |
+| Clock-dependent promo expiry                      | A spec that fails at midnight                    | The same-day boundary specs create a code with an expiry they control, rather than relying on the seeded one alone.                                                                                                                                                |
 
 ## 8. Deliverables
 

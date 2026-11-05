@@ -50,7 +50,7 @@ export default async function ConfirmationPage({
     <section className="flex max-w-2xl flex-col gap-6">
       <div className="rounded-lg border border-green-300 bg-green-50 p-6">
         <h1 data-testid="confirmation-heading" className="text-2xl font-bold text-green-900">
-          Thank you — your order is confirmed
+          Thank you, your order is confirmed
         </h1>
         <p className="mt-2 text-sm text-green-900">
           Order number{' '}

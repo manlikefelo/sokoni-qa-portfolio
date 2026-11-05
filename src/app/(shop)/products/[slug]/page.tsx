@@ -7,7 +7,7 @@ import { AddToCartForm } from '@/components/add-to-cart-form';
 // The product lookup decides between rendering a page and returning a 404, so it
 // has to resolve before the response is committed. A loading.tsx covering this
 // segment would wrap it in a Suspense boundary, stream a 200 shell, and lose the
-// 404 status — which is why the skeletons live on the sibling routes instead.
+// 404 status, which is why the skeletons live on the sibling routes instead.
 export const dynamic = 'force-dynamic';
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {

@@ -63,7 +63,7 @@ export class ProductPage extends BasePage {
   }
 
   /**
-   * Adds an item and waits for the outcome — success banner or error. Returning once
+   * Adds an item and waits for the outcome: success banner or error. Returning once
    * either is on screen avoids having to guess how long the action takes.
    */
   async addToCartAndWait(): Promise<void> {

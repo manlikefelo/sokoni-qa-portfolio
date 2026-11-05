@@ -1,5 +1,5 @@
 /**
- * Catalogue seed data. Fixed slugs, fixed prices and fixed stock levels — the test
+ * Catalogue seed data. Fixed slugs, fixed prices and fixed stock levels: the test
  * suite asserts on exact values, so nothing here may be randomised.
  *
  * Stock levels are deliberately spread across the interesting boundaries: several

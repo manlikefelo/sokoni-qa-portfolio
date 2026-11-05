@@ -1,6 +1,6 @@
 /**
  * Every monetary amount in Sokoni is an integer count of cents. Floats are never
- * used for money anywhere in this codebase — not in the database, not in the
+ * used for money anywhere in this codebase: not in the database, not in the
  * pricing engine, not in transport between server and client.
  */
 

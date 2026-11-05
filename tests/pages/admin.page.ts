@@ -209,7 +209,7 @@ export class AdminPage extends BasePage {
    *
    * Returns false when the page rendered no form at all, which is the case for a
    * terminal status. A caller must decide what that means rather than being handed a
-   * silent success — an earlier version of this method built a detached form instead,
+   * silent success: an earlier version of this method built a detached form instead,
    * which submitted nowhere and made every terminal-status test pass without ever
    * reaching the server. A test that cannot fail is worse than no test.
    */

@@ -37,7 +37,7 @@ meant to be correct, and the suite asserts that they are.
 
 ---
 
-## BUG-01 — Percentage discount applied to the total including shipping
+## BUG-01: Percentage discount applied to the total including shipping
 
 **Severity:** High · **Commit:** `beab256`
 **File:** `src/lib/pricing.ts` · **Function:** `priceCart`
@@ -48,7 +48,7 @@ the subtotal alone, so the shopper receives a discount on their delivery charge.
 **Manifests when** the order is below the free-shipping threshold of KSh 5,000, so
 shipping is a non-zero KSh 350, and a percentage code is applied. It is completely
 invisible above the threshold, because shipping is then zero and there is nothing
-extra to discount — which is exactly what makes it easy to ship.
+extra to discount, which is exactly what makes it easy to ship.
 
 **Worked example.** One item at KSh 2,000 with `SAVE10`:
 
@@ -64,14 +64,14 @@ is never discounted. Shipping is then assessed on the post-discount subtotal.
 
 ---
 
-## BUG-02 — Cart quantity update bypasses the stock check
+## BUG-02: Cart quantity update bypasses the stock check
 
 **Severity:** High · **Commit:** `2766bcc`
 **File:** `src/actions/cart.ts` · **Function:** `updateQuantityAction`
 
 `addToCartAction` validates the requested quantity against `stockQty` and refuses to
-exceed it. `updateQuantityAction` looks the variant up — so a deleted variant is still
-caught — but never compares the new quantity against available stock.
+exceed it. `updateQuantityAction` looks the variant up, so a deleted variant is still
+caught, but never compares the new quantity against available stock.
 
 **Manifests when** an item already in the cart has its quantity raised from the cart
 page, or by calling the action directly. Adding 3 of a variant with 2 in stock is
@@ -82,12 +82,12 @@ correctly refused; adding 1 and then editing the quantity to 3 succeeds.
 5 × KSh 28,900.00 and checkout proceeds.
 
 **Expected behaviour.** Every path that can change a quantity enforces the stock
-ceiling — product page, cart page, and any route handler. A request above stock is
+ceiling, product page, cart page, and any route handler. A request above stock is
 rejected with the available figure in the message.
 
 ---
 
-## BUG-03 — Pagination skips an entire page
+## BUG-03: Pagination skips an entire page
 
 **Severity:** Medium · **Commit:** `47b34f5`
 **File:** `src/lib/catalogue.ts` · **Function:** `findProducts`
@@ -107,7 +107,7 @@ Walking every page yields exactly 25 distinct products with no repeats and no ga
 
 ---
 
-## BUG-04 — Maximum price filter excludes the boundary value
+## BUG-04: Maximum price filter excludes the boundary value
 
 **Severity:** Medium · **Commit:** `1559943`
 **File:** `src/lib/catalogue.ts` · **Function:** `buildWhere`
@@ -133,12 +133,12 @@ filtered view even when it is in the result set, so this defect is cleanest to a
 against the result **count** rather than against the visible grid. Two defects
 overlapping on one screen is itself a useful thing for the suite to have to separate.
 
-**Expected behaviour.** Both bounds are inclusive — a product priced at exactly the
+**Expected behaviour.** Both bounds are inclusive: a product priced at exactly the
 minimum or exactly the maximum appears in the results.
 
 ---
 
-## BUG-05 — Guest cart replaces the user cart on login
+## BUG-05: Guest cart replaces the user cart on login
 
 **Severity:** High · **Commit:** `4380c4c`
 **File:** `src/lib/cart.ts` · **Function:** `mergeGuestCartIntoUserCart`
@@ -162,7 +162,7 @@ quantities summed and then capped at available stock. Neither cart is discarded.
 
 ---
 
-## BUG-06 — Stock decremented before the payment is confirmed
+## BUG-06: Stock decremented before the payment is confirmed
 
 **Severity:** Critical · **Commit:** `7436161`
 **File:** `src/actions/checkout.ts` · **Function:** `placeOrderAction`
@@ -171,7 +171,7 @@ Stock is decremented as a "reservation" before the gateway is called, and is nev
 restored when the payment is declined or errors.
 
 **Manifests on** every checkout that does not end in an approved payment. The
-framing as a reservation is what makes it plausible — reserving stock during checkout
+framing as a reservation is what makes it plausible, reserving stock during checkout
 is a real pattern, but a real implementation releases the reservation on failure.
 
 **Worked example.** `FASH-AVIA-GLD` (Aviator sunglasses) has `stockQty = 1`. Check
@@ -186,7 +186,7 @@ errored payment leaves every stock level untouched.
 
 ---
 
-## BUG-07 — A promo code expiring today is rejected from midnight
+## BUG-07: A promo code expiring today is rejected from midnight
 
 **Severity:** Medium · **Commit:** `b0ee2a0`
 **File:** `src/lib/promo.ts` · **Function:** `isExpired`
@@ -208,7 +208,7 @@ code expiring at 23:59:59 today is valid until that instant and invalid from it.
 
 ---
 
-## BUG-08 — Percentage discount rounded per line rather than once
+## BUG-08: Percentage discount rounded per line rather than once
 
 **Severity:** Medium · **Commit:** `f5c518f`
 **File:** `src/lib/pricing.ts` · **Function:** `computeLineDiscounts`
@@ -218,12 +218,12 @@ shares are then summed, instead of the discount being computed once against the
 subtotal and that single figure rounded.
 
 **Manifests when** several lines each land on a half-cent boundary, so each rounds up
-and the accumulated error shows in the total. Drift is one or two cents — small enough
+and the accumulated error shows in the total. Drift is one or two cents, small enough
 to survive casual review, which is the point.
 
 **Worked example, isolated from BUG-01.** Five lines at KSh 1,111.15 each, subtotal
 KSh 5,555.75, with `SAVE10`. The _post-discount_ subtotal is still above the
-free-shipping threshold, so shipping is zero and BUG-01 contributes nothing — any
+free-shipping threshold, so shipping is zero and BUG-01 contributes nothing, any
 difference here is attributable to per-line rounding alone.
 
 |           | Correct                   | Actual                  |
@@ -235,7 +235,7 @@ difference here is attributable to per-line rounding alone.
 
 Isolating the two defects needs care: on a cart whose post-discount subtotal falls
 _below_ KSh 5,000 the shipping charge reappears and BUG-01 dominates the difference.
-Drift grows with the number of half-cent lines — six such lines drift 3 cents, ten
+Drift grows with the number of half-cent lines: six such lines drift 3 cents, ten
 drift 5.
 
 **Expected behaviour.** The percentage is applied to the subtotal and the result is
@@ -243,7 +243,7 @@ rounded exactly once, half-up. No per-line rounding.
 
 ---
 
-## BUG-09 — Product search is case-sensitive
+## BUG-09: Product search is case-sensitive
 
 **Severity:** Medium · **Commit:** `efc43f5`
 **File:** `src/lib/catalogue.ts` · **Functions:** `matchesSearch`, `findProducts`
@@ -256,7 +256,7 @@ so the search term must match the stored capitalisation exactly.
 finds the Leather Bifold Wallet; `wallet` and `WALLET` find nothing. `shirt` fails to
 find the Premium Cotton Crew T-Shirt.
 
-Some terms still appear to work — `kettle` and `headphones` match because those words
+Some terms still appear to work: `kettle` and `headphones` match because those words
 occur in lowercase inside the product descriptions. Partial success makes the defect
 harder to spot than a search that fails outright, and is why the test for this needs
 upper, lower and mixed case variations rather than a single happy-path query.
@@ -273,7 +273,7 @@ partial match. `shirt`, `Shirt` and `SHIRT` all return the same results.
 
 ---
 
-## BUG-10 — Admin order status transitions are not validated
+## BUG-10: Admin order status transitions are not validated
 
 **Severity:** Medium · **Commit:** `1916851`
 **File:** `src/actions/admin.ts` · **Function:** `updateOrderStatusAction`
@@ -281,7 +281,7 @@ partial match. `shirt`, `Shirt` and `SHIRT` all return the same results.
 The action validates that the submitted status is a member of the `OrderStatus` enum
 and then writes it, without checking whether the transition is legal from the order's
 current status. `canTransition` in `src/lib/order-status.ts` still exists and is still
-used to build the dropdown, so the UI only offers legal targets — but the UI is not
+used to build the dropdown, so the UI only offers legal targets, but the UI is not
 the enforcement point.
 
 **Manifests when** the action is invoked with a target the state machine forbids.
@@ -318,7 +318,7 @@ carelessness.
 
 **`notFound()` returned HTTP 200.** A `loading.tsx` at the application root wrapped
 every route in a Suspense boundary. Next.js streams suspended routes, which commits
-the response status before the page body runs — so the not-found UI rendered correctly
+the response status before the page body runs, so the not-found UI rendered correctly
 while the status line had already gone out as `200`. A test asserting only on visible
 text would have passed. Fixed by moving the catalogue's Suspense boundary inside the
 page component, leaving `products/[slug]` free to set its own status. See the comment
@@ -327,5 +327,5 @@ in `src/app/(shop)/products/page.tsx`.
 **`/admin` and `/account` leaked 200s.** The same streaming behaviour meant the
 admin 404 and the account redirect never reached the client as real status codes.
 Fixed with `src/middleware.ts`, which resolves both checks before the response begins.
-The server-side checks in the pages and actions were left in place — the middleware
+The server-side checks in the pages and actions were left in place: the middleware
 exists to make the HTTP semantics honest, not to replace the authorisation boundary.
