@@ -14,7 +14,10 @@ import { USERS, type UserRole } from './users';
 async function signInAndSave(baseURL: string, role: UserRole): Promise<void> {
   const user = USERS[role];
   const browser = await chromium.launch();
-  const context = await browser.newContext({ baseURL });
+  const context = await browser.newContext({
+    baseURL,
+    ignoreHTTPSErrors: baseURL.startsWith('https:'),
+  });
   const page = await context.newPage();
 
   try {

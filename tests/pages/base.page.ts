@@ -59,8 +59,23 @@ export abstract class BasePage {
     await this.cartLink.click();
   }
 
+  /** Signs out through whichever navigation this viewport shows. */
   async logout(): Promise<void> {
+    if (await this.mobileNavToggle.isVisible()) {
+      await this.mobileNavToggle.click();
+      await this.page.getByTestId('mobile-nav-logout').click();
+      return;
+    }
     await this.logoutButton.click();
+  }
+
+  /** The admin link this viewport shows, with the mobile menu opened if it is collapsed. */
+  async revealAdminLink(): Promise<Locator> {
+    if (await this.mobileNavToggle.isVisible()) {
+      await this.mobileNavToggle.click();
+      return this.page.getByTestId('mobile-nav-admin');
+    }
+    return this.adminLink;
   }
 
   /** Reloads the current page. Exposed so specs need no access to `page` itself. */

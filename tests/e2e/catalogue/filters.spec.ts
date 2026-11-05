@@ -46,7 +46,7 @@ test.describe('SK-CAT — catalogue filters', () => {
     await cataloguePage.goto({ categories: [] });
     await cataloguePage.toggleCategory('fashion');
 
-    expect(page.url()).toContain('category=fashion');
+    await expect(page).toHaveURL(/category=fashion/);
     const expected = await testDb.product.count({
       where: { isActive: true, category: { slug: 'fashion' } },
     });

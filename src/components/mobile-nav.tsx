@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { LogoutButton } from './logout-button';
 
 /**
  * Navigation for viewports below the md breakpoint. The panel is toggled with the
@@ -55,11 +56,20 @@ export function MobileNav({
             </li>
           )}
           {isAuthenticated ? (
-            <li>
-              <Link href="/account" data-testid="mobile-nav-account" onClick={() => setOpen(false)}>
-                Account
-              </Link>
-            </li>
+            <>
+              <li>
+                <Link
+                  href="/account"
+                  data-testid="mobile-nav-account"
+                  onClick={() => setOpen(false)}
+                >
+                  Account
+                </Link>
+              </li>
+              <li>
+                <LogoutButton testId="mobile-nav-logout" />
+              </li>
+            </>
           ) : (
             <>
               <li>

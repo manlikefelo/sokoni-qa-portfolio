@@ -23,3 +23,7 @@ next-env.d.ts
 
 # Working document for the finishing session, not a deliverable
 SESSION_STATE.md
+
+# Throwaway TLS material and collected results from CI
+.ci-tls
+ci-results

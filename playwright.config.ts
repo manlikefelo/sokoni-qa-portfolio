@@ -2,6 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const BASE_URL = process.env.BASE_URL ?? `http://localhost:${PORT}`;
+// CI serves the app over HTTPS with a throwaway certificate. See scripts/https-proxy.mjs.
+const IGNORE_HTTPS_ERRORS = BASE_URL.startsWith('https:');
 
 export default defineConfig({
   testDir: './tests',
@@ -45,6 +47,7 @@ export default defineConfig({
 
   use: {
     baseURL: BASE_URL,
+    ignoreHTTPSErrors: IGNORE_HTTPS_ERRORS,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -65,6 +68,7 @@ export default defineConfig({
     // Next.js streams differently in development.
     command: 'npm run build && npm run start',
     url: BASE_URL,
+    ignoreHTTPSErrors: IGNORE_HTTPS_ERRORS,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
     stdout: 'ignore',

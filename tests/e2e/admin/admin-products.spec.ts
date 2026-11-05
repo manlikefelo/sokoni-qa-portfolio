@@ -45,7 +45,7 @@ test.describe('SK-ADM — products', () => {
 
   test('SK-ADM-310 the admin link is visible to an admin', async ({ page, adminPage }) => {
     await page.goto('/products');
-    await expect(adminPage.adminLink).toBeVisible();
+    await expect(await adminPage.revealAdminLink()).toBeVisible();
   });
 
   test('SK-ADM-311 the overview reports the catalogue size', async ({ adminPage }) => {

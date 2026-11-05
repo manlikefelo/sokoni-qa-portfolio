@@ -5,3 +5,5 @@ playwright-report
 test-results
 public/products
 package-lock.json
+.ci-tls
+ci-results

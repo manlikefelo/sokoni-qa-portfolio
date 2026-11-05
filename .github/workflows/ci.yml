@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'ci/**']
   pull_request:
     branches: [main]
 
@@ -37,6 +37,12 @@ jobs:
   test:
     name: E2E — ${{ matrix.project }}
     runs-on: ubuntu-latest
+    # Real TLS, because a production build mints Secure cookies and WebKit on Linux does
+    # not keep them over plain http://localhost. See scripts/https-proxy.mjs.
+    env:
+      BASE_URL: https://localhost:3443
+      AUTH_URL: https://localhost:3443
+      NODE_EXTRA_CA_CERTS: ${{ github.workspace }}/.ci-tls/cert.pem
     strategy:
       # One browser failing should not hide the state of the others.
       fail-fast: false
@@ -54,11 +60,23 @@ jobs:
       - run: npm run seed
       - run: npx playwright install --with-deps
       - run: npm run build
+      - name: Start HTTPS proxy
+        run: |
+          mkdir -p .ci-tls
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -keyout .ci-tls/key.pem -out .ci-tls/cert.pem \
+            -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost'
+          nohup node scripts/https-proxy.mjs .ci-tls/key.pem .ci-tls/cert.pem > /dev/null 2>&1 &
       # Excludes tests/visual, whose baselines are platform-specific and are
       # regenerated in the a11y-and-visual job. Running them here would compare Linux
       # screenshots against the committed Windows set and fail every time.
       - name: Run Playwright
-        run: npx playwright test tests/e2e tests/api tests/smoke.spec.ts --project="${{ matrix.project }}"
+        run: npx playwright test tests/e2e tests/api tests/smoke.spec.ts --project="${{ matrix.project }}" || true
+      - name: Keep results
+        if: always()
+        run: |
+          mkdir -p ci-results
+          cp test-results/results.json ci-results/main.json
 
       # Run after the parallel suite, because it exhausts the process-wide rate
       # limiter and cannot share the application with anything else.
@@ -74,6 +92,43 @@ jobs:
           path: |
             playwright-report/
             test-results/
+            ci-results/
+          retention-days: 14
+
+  # The same suite with the ten seeding commits reverted, which is what proves the seeded
+  # defects are the reason the main run fails.
+  clean-baseline:
+    name: Clean baseline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Revert the seeded defects
+        run: git revert --no-commit 6272c09^..115f747
+      - run: npm ci
+      - run: npx prisma migrate deploy
+      - run: npx prisma generate
+      - run: npm run seed
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Run Playwright
+        run: npx playwright test tests/e2e tests/api tests/smoke.spec.ts --project=chromium || true
+      - name: Keep results
+        if: always()
+        run: |
+          mkdir -p ci-results
+          cp test-results/results.json ci-results/clean.json
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-clean-baseline
+          path: ci-results/
           retention-days: 14
 
   a11y-and-visual:
