@@ -417,7 +417,7 @@ denormalised column; on SQLite via Prisma it likely needs the column. Alternativ
 display `basePriceCents`, but showing a price higher than the cheapest purchasable
 variant is worse for the shopper.
 
-**Why this is the interesting one:** it was not planted. It came from a test that read
+**Why it matters:** it was not planted. It came from a test that read
 the actual displayed values and compared them, rather than checking that the sort
 control had the right label selected. A presence-style assertion would have passed.
 
@@ -447,7 +447,7 @@ the login redirect. The gating worked; the HTTP semantics did not.
 
 Fixed with `src/proxy.ts`, which resolves both checks before the response begins. The
 server-side checks in the pages and actions were left in place: the proxy exists to make
-the status codes honest, not to replace the authorisation boundary.
+the status codes correct, not to replace the authorisation boundary.
 
 ### SK-BUG-014: Promo rate limiter counted successful applications _(fixed)_
 

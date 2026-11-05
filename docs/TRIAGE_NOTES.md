@@ -92,7 +92,7 @@ the buckets between specs through `/api/test-support/reset-rate-limit`, gated on
 
 The first version of that route also checked `NODE_ENV !== 'production'` and therefore
 404'd during the run, because the suite deliberately tests against a production build.
-The environment variable is the honest control; NODE_ENV was the wrong gate.
+The environment variable is the right control; NODE_ENV was the wrong gate.
 
 ## Promo specs: first run
 

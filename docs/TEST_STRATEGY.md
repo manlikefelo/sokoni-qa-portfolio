@@ -160,7 +160,7 @@ racing for the last unit of stock is a real scenario with a real test
 
 Where a spec genuinely needs exclusive access to shared state: the cart-merge specs all
 operate on one account, the stock-ceiling specs all set the stock of one variant. It
-declares `mode: 'serial'` and says why in a comment. That is an honest, local admission
+declares `mode: 'serial'` and says why in a comment. That is a local admission
 of a constraint rather than a global policy that removes the constraint by removing the
 parallelism.
 

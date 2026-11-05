@@ -265,8 +265,8 @@ upper, lower and mixed case variations rather than a single happy-path query.
 still maintained on every write but is no longer read by search. That dead column is
 part of the defect's footprint, not a separate issue.
 
-**Worked example.** `/products?q=shirt` → "No products found".
-`/products?q=Shirt` → 1 result.
+**Worked example.** `/products?q=shirt` returns "No products found".
+`/products?q=Shirt` returns 1 result.
 
 **Expected behaviour.** Search matches name and description case-insensitively on a
 partial match. `shirt`, `Shirt` and `SHIRT` all return the same results.
@@ -328,4 +328,4 @@ in `src/app/(shop)/products/page.tsx`.
 admin 404 and the account redirect never reached the client as real status codes.
 Fixed with `src/middleware.ts`, which resolves both checks before the response begins.
 The server-side checks in the pages and actions were left in place: the middleware
-exists to make the HTTP semantics honest, not to replace the authorisation boundary.
+exists to make the HTTP semantics correct, not to replace the authorisation boundary.

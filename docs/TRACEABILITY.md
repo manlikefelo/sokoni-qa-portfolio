@@ -257,7 +257,7 @@ corroborating.
 | BUG-08 | SK-PRICE-019, 020, 021, 022, 023                                       |
 | BUG-10 | SK-ADM-100 to 111, 201 to 205 (18 transitions in total)                |
 
-### Honesty notes
+### Notes
 
 - No test in this suite was written after reading PRD section 9. The defect list was
   consulted only to write `SEEDED_DEFECTS.md` and to confirm the mapping above.
