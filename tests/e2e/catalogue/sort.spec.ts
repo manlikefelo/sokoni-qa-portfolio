@@ -92,9 +92,14 @@ test.describe('SK-CAT: sorting', () => {
     const byName = await cataloguePage.visibleSlugs();
 
     await cataloguePage.setSort('price-desc');
-    const byPrice = await cataloguePage.visibleSlugs();
-
-    expect(byPrice).not.toEqual(byName);
+    // During the loading state the grid is empty, and an empty list counts as sorted. Wait
+    // for a real grid in a new order before reading the prices.
+    await expect
+      .poll(async () => {
+        const slugs = await cataloguePage.visibleSlugs();
+        return slugs.length > 0 && slugs.join() !== byName.join();
+      })
+      .toBe(true);
     const prices = await cataloguePage.visiblePricesInCents();
     expect(prices).toEqual([...prices].sort((a, b) => b - a));
   });

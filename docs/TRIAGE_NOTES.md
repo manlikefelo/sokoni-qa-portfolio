@@ -450,5 +450,11 @@ The browser comparison and later runs turned up six more bad tests: `SK-ACC-054`
 phone width, and four read the page once before it had updated: `SK-CAT-023` the URL,
 `SK-CART-003` the cart badge, `SK-CAT-048` the grid, and `SK-CAT-033` the result count.
 
+Two more only showed up once the gate compared every run. `SK-CAT-066` passed now and then by
+accident: it could read the prices during the loading state, and an empty list counts as
+sorted. `SK-CHK-020` sometimes timed out on Firefox with a filled form and no response to the
+click. The likely cause was a click landing before React attached, so the form now exposes
+`data-hydrated` and the page object waits for it. A retry would have hidden the question.
+
 CI now enforces both records through `tests/expected-failures.json`, so a green badge means
 the failures are exactly the known ones, not merely that the job ran.

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState, useSyncExternalStore, useTransition } from 'react';
 import { saveAddressAction } from '@/actions/checkout';
 import { ErrorBanner } from './error-banner';
 
@@ -53,6 +53,13 @@ export function AddressForm({
     savedAddresses.find((address) => address.isDefault)?.id ?? savedAddresses[0]?.id ?? '',
   );
   const [pending, startTransition] = useTransition();
+  // False in the server HTML and true once React has attached, so a test can wait for a
+  // form that will actually respond to a click.
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const submit = (formData: FormData) => {
     if (!useNew && selectedId) {
@@ -75,7 +82,12 @@ export function AddressForm({
   const inputClass = 'mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm';
 
   return (
-    <form action={submit} data-testid="address-form" className="flex max-w-xl flex-col gap-5">
+    <form
+      action={submit}
+      data-testid="address-form"
+      data-hydrated={hydrated}
+      className="flex max-w-xl flex-col gap-5"
+    >
       {savedAddresses.length > 0 && (
         <fieldset className="flex flex-col gap-3">
           <legend className="text-sm font-semibold">Deliver to</legend>

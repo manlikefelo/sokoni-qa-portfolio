@@ -22,7 +22,7 @@ suite found all ten. It also found **two defects I had not planted**, which stay
 documented, and **six genuine bugs in my own application** that I fixed rather than
 leaving in.
 
-More usefully, it found **sixteen defects in my own tests**, including one case where
+More usefully, it found **eighteen defects in my own tests**, including one case where
 six tests were passing while submitting nothing at all. Those are written up in
 [`docs/TRIAGE_NOTES.md`](./docs/TRIAGE_NOTES.md) with the reasoning, because knowing the
 difference between a broken application and a broken test is most of the job.
@@ -33,7 +33,7 @@ difference between a broken application and a broken test is most of the job.
 | Suite                        | 274 specs across E2E, API, accessibility and visual layers        |
 | Seeded defects               | 10, all caught by named tests written from the spec               |
 | Unplanned defects found      | 2 still open, 6 found and fixed during the build                  |
-| Test defects found and fixed | 16, each documented with the root cause                           |
+| Test defects found and fixed | 18, each documented with the root cause                           |
 | Retries                      | 0, locally and in CI                                              |
 
 ---

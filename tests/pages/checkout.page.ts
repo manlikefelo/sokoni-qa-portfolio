@@ -178,6 +178,9 @@ export class CheckoutPage extends BasePage {
    * skipped and the form failed server-side validation with no obvious cause.
    */
   async fillAddress(address: AddressInput): Promise<void> {
+    // A click before React attaches is lost, leaving a filled form that never submits.
+    await this.page.locator('[data-testid="address-form"][data-hydrated="true"]').waitFor();
+
     // line1 is present in every variant of this form, so waiting for it is the
     // signal that the form is ready to be typed into.
     await this.addressField('line1').waitFor({ state: 'visible' });
