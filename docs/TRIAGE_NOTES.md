@@ -433,13 +433,13 @@ The README used to promise a green suite at `v1.0-clean`, but that tag predates 
 so nobody had ever seen it. Reverting the seeding commits on top of the current suite gave
 the first real answer, and five tests failed:
 
-| Spec            | Verdict            | Reasoning                                                                    |
-| --------------- | ------------------ | ---------------------------------------------------------------------------- |
-| SK-PRICE-012    | **bad test**       | The shared runner required "promo applied" for a code correctly refused.     |
-| SK-CART-028     | **bad test**       | `fill('abc')` throws on a number input. Keystrokes are what a shopper sends. |
-| SK-CHK-017      | defect (unplanned) | SK-BUG-017, hidden on `main` because BUG-06 fails the same test.             |
-| SK-CAT-008      | defect (unplanned) | SK-BUG-018, in query code that BUG-09 replaces.                              |
-| SK-CAT-060      | defect (unplanned) | SK-BUG-011 again. Which sort test catches it depends on what is on page 1.   |
+| Spec         | Verdict            | Reasoning                                                                    |
+| ------------ | ------------------ | ---------------------------------------------------------------------------- |
+| SK-PRICE-012 | **bad test**       | The shared runner required "promo applied" for a code correctly refused.     |
+| SK-CART-028  | **bad test**       | `fill('abc')` throws on a number input. Keystrokes are what a shopper sends. |
+| SK-CHK-017   | defect (unplanned) | SK-BUG-017, hidden on `main` because BUG-06 fails the same test.             |
+| SK-CAT-008   | defect (unplanned) | SK-BUG-018, in query code that BUG-09 replaces.                              |
+| SK-CAT-060   | defect (unplanned) | SK-BUG-011 again. Which sort test catches it depends on what is on page 1.   |
 
 `SK-PRICE-012` also failed on `main`, where it had been counted as catching a seeded
 defect. A failing test isn't evidence until you know why it fails, which is the same lesson
